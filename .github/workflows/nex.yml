@@ -16,6 +16,18 @@ jobs:
   nex:
     runs-on: ubuntu-latest
     timeout-minutes: 150
+    # Faqat kerakli kalitlar, har biri nomi bilan (hammasini birdan olish GitHub'da shubha uyg'otadi)
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_MODELS: ${{ secrets.GEMINI_MODELS }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+      YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+      NEX_YOUTUBE_REFRESH_TOKEN: ${{ secrets.NEX_YOUTUBE_REFRESH_TOKEN }}
+      NEX_SLOTS: '11:30,17:30,23:30'
     steps:
       - uses: actions/checkout@v4
 
@@ -27,16 +39,6 @@ jobs:
       - name: Kutubxonalar
         run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
 
-      - name: Kalitlar (.env faqat shu server ichida yaratiladi)
-        env:
-          SECRETS_JSON: ${{ toJSON(secrets) }}
-        run: |
-          node -e '
-            const s = JSON.parse(process.env.SECRETS_JSON); delete s.github_token;
-            const line = ([k, v]) => k + "=" + (/^[\w.\-:\/+=,@%]*$/.test(v) ? v : JSON.stringify(v));
-            require("fs").writeFileSync(".env", Object.entries(s).map(line).join("\n") + "\n", { mode: 0o600 });
-          '
-
       - name: Oldingi holat (qaysi qo'shiqlar qilingan)
         uses: actions/cache/restore@v4
         with:
@@ -46,7 +48,7 @@ jobs:
 
       - name: Telegram'dan yangi qo'shiqlar
         id: pull
-        run: node --env-file=.env src/nex/cloud.js pull
+        run: node src/nex/cloud.js pull
 
       - name: ffmpeg
         if: steps.pull.outputs.work == '1'
@@ -73,7 +75,7 @@ jobs:
         if: steps.pull.outputs.work == '1'
         env:
           NEX_PYTHON: python
-        run: node --env-file=.env src/nex/run.js
+        run: node src/nex/run.js
 
       - name: Tozalash
         if: always() && steps.pull.outputs.work == '1'
