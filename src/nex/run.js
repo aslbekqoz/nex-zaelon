@@ -85,7 +85,8 @@ async function processRun(dir) {
     { name: 'Metadata', out: 'metadata.json', fn: () => {
       // sarlavha shablonlari navbat bilan almashadi (har yangi qo'shiqda boshqasi)
       const local = fs.readdirSync(nex.paths.runs).filter((d) => fs.existsSync(path.join(nex.paths.runs, d, 'metadata.json'))).length;
-      const index = Math.max(local, remoteCount ?? 0);
+      // kanaldagi videolar soni + shu ishga tushishda yuklanganlar -> har qo'shiqda boshqa sarlavha shabloni
+      const index = remoteCount != null ? remoteCount + uploadedThisRun : local;
       const m = buildMetadata(readJson(f('listen.json')), index);
       writeJson(f('metadata.json'), m);
       log(`📝 ${m.title}`);
@@ -114,6 +115,7 @@ async function processRun(dir) {
     }
   }
   status('uploaded', 'done');
+  uploadedThisRun++;
   const up = readJson(f('upload.json'));
   const meta = readJson(f('metadata.json'));
   const when = new Date(readJson(f('slot.json')).publishAt).toLocaleString('sv-SE', { timeZone: 'Asia/Tashkent' }).slice(0, 16);
@@ -126,6 +128,7 @@ intake();
 const jobs = pending();
 if (!jobs.length) console.log(`[${new Date().toISOString()}] Nex: yangi qo'shiq yo'q (nex-inbox/ bo'sh).`);
 let ok = 0;
+let uploadedThisRun = 0;
 if (jobs.length) await loadRemoteSlots();
 for (const dir of jobs) if (await processRun(dir)) ok++;
 if (jobs.length) console.log(`Nex: ${ok}/${jobs.length} ta qo'shiq tayyor.`);
