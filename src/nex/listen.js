@@ -4,6 +4,8 @@
 // Gemini naqarotni topa olmasa — eng baland 35 soniyalik joy olinadi (zaxira usul).
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { config } from '../config.js';
 import { askJson } from '../lib/gemini.js';
 import { ffmpeg, duration } from '../lib/ffmpeg.js';
@@ -13,7 +15,7 @@ import { writeJson } from '../lib/util.js';
 // "o'" uchun turli apostroflarni bitta oddiy belgiga keltiramiz (shriftda bor bo'lishi uchun)
 const cleanText = (t) => String(t || '').replace(/[ʻʼ‘’`´]/g, "'").replace(/\s+/g, ' ').trim();
 
-export async function runListen(audioFile, runDir, planEntry) {
+export async function runListen(audioFile, runDir, planEntry, fileTitle = '') {
   const out = path.join(runDir, 'listen.json');
   const dur = await duration(audioFile);
   const small = path.join(runDir, 'listen.mp3');
@@ -75,9 +77,12 @@ export async function runListen(audioFile, runDir, planEntry) {
     log(`   ↪️  Naqarot aniqlanmadi — eng baland joy olindi: ${start.toFixed(1)}s`);
   }
 
+  // Vaqtlarni Whisper bilan aniqlash (naqarot atrofida — videoga aynan shu qism kiradi)
+  ({ lyrics, chorus } = await syncLyrics(audioFile, runDir, lyrics, chorus, dur, r.language));
+
   const result = {
     duration: dur,
-    title: cleanText(planEntry?.title || r.title || path.parse(audioFile).name),
+    title: cleanText(planEntry?.title || fileTitle || r.title || 'Untitled'),
     genre: cleanText(planEntry?.genre || r.genre || 'pop'),
     mood: cleanText(r.mood || ''),
     language: cleanText(r.language || 'English'),
@@ -91,6 +96,66 @@ export async function runListen(audioFile, runDir, planEntry) {
   log(`   ✅ ${lyrics.length} ta lirika qatori, naqarot ${chorus.start.toFixed(1)}–${chorus.end.toFixed(1)}s, janr: ${result.genre}`);
   log(`   💬 Eng kuchli qator: "${result.bestLine}"`);
   return result;
+}
+
+// ---------- Sinxronlash (Whisper) ----------
+// Gemini qatorlari matnini saqlab, vaqtini Whisper eshitgan so'zlarga moslaydi. Python/faster-whisper
+// o'rnatilmagan bo'lsa (masalan laptopda) — jim o'tkazib yuboriladi, Gemini vaqtlari qoladi.
+const ALIGN = path.join(path.dirname(fileURLToPath(import.meta.url)), 'align.py');
+function py(args, timeoutMs) {
+  return new Promise((resolve) => {
+    const p = spawn(process.env.NEX_PYTHON || 'python3', args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    let err = '';
+    p.stderr.on('data', (d) => { err += d; });
+    const t = setTimeout(() => p.kill('SIGKILL'), timeoutMs);
+    p.on('error', (e) => { clearTimeout(t); resolve({ ok: false, err: e.message }); });
+    p.on('close', (code) => { clearTimeout(t); resolve({ ok: code === 0, err: err.slice(-300) }); });
+  });
+}
+
+const tidy = (lyrics, dur) => lyrics.sort((a, b) => a.start - b.start).map((l, i, arr) => {
+  const next = arr[i + 1]?.start ?? dur;
+  const end = Math.min(l.end > l.start ? l.end : l.start + 3.5, next, dur, l.start + 7);
+  return { ...l, start: +l.start.toFixed(2), end: +Math.max(end, l.start + 0.6).toFixed(2) };
+});
+
+export async function syncLyrics(audioFile, runDir, lyrics, chorus, dur, language) {
+  if (config.mock || process.env.NEX_ALIGN === '0' || !lyrics.length) return { lyrics, chorus };
+  const ws = Math.max(0, chorus.start - 4);
+  const we = Math.min(dur, chorus.start + 52);
+  const inside = lyrics.filter((l) => l.start < we && l.end > ws);
+  if (!inside.length) return { lyrics, chorus };
+  const wav = path.join(runDir, 'sync.wav');
+  const job = path.join(runDir, 'sync-job.json');
+  const res = path.join(runDir, 'sync.json');
+  await ffmpeg(['-ss', ws.toFixed(2), '-t', (we - ws).toFixed(2), '-i', audioFile, '-ac', '1', '-ar', '16000', wav]);
+  fs.writeFileSync(job, JSON.stringify({ audio: wav, offset: ws, language, model: process.env.NEX_WHISPER_MODEL || 'small', lines: inside }));
+  const t0 = Date.now();
+  const r = await py([ALIGN, job, res], 8 * 60_000);
+  fs.rmSync(wav, { force: true });
+  if (!r.ok || !fs.existsSync(res)) {
+    log(`   ↪️  Sinxronlash o'tkazib yuborildi (${(r.err || 'whisper yo\'q').split('\n').filter(Boolean).pop()?.slice(0, 90)})`);
+    return { lyrics, chorus };
+  }
+  const a = JSON.parse(fs.readFileSync(res, 'utf8'));
+  if (!a.lines?.length || a.words < 3) {
+    log('   ↪️  Whisper ovozni deyarli eshitmadi — Gemini vaqtlari qoldi');
+    return { lyrics, chorus };
+  }
+  const aligned = a.lines.map((l) => ({ start: Number(l.start), end: Number(l.end), text: cleanText(l.text) }))
+    .filter((l) => l.text && Number.isFinite(l.start) && Number.isFinite(l.end));
+  const outside = lyrics.filter((l) => !(l.start < we && l.end > ws));
+  const moved = inside.length ? inside.reduce((s, l, i) => s + Math.abs(l.start - (aligned[i]?.start ?? l.start)), 0) / inside.length : 0;
+  const next = tidy([...outside, ...aligned], dur);
+  // naqarot boshini haqiqiy qator boshiga to'g'rilaymiz (klip qator o'rtasidan boshlanmasin)
+  // Gemini naqarotning birinchi qatori deb bilgan qatorni topib, uning YANGI vaqtini olamiz
+  const gi = inside.findIndex((l) => l.start >= chorus.start - 0.8);
+  const first = a.mode === 'aligned' && gi >= 0 && aligned.length === inside.length ? aligned[gi]
+    : aligned.find((l) => l.start >= chorus.start - 2.5);
+  const newChorus = first ? { ...chorus, start: first.start, end: Math.max(chorus.end, first.start + 25) } : chorus;
+  log(`   🎯 Sinxronlash (${a.mode === 'whisper' ? 'Whisper matni' : 'Gemini matni + Whisper vaqti'}): ${aligned.length} qator, ` +
+    `mos ${(a.ratio * 100).toFixed(0)}%, o'rtacha siljish ${moved.toFixed(1)}s, ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+  return { lyrics: next, chorus: newChorus };
 }
 
 // Gemini ba'zan javobni massiv yoki {"song": {...}} ichiga o'raydi — ochib olamiz

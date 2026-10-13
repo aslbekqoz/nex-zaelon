@@ -52,8 +52,27 @@ jobs:
         if: steps.pull.outputs.work == '1'
         run: which ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
 
+      - name: Whisper (lirika vaqtini aniqlash uchun)
+        if: steps.pull.outputs.work == '1'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Whisper modeli (kesh)
+        if: steps.pull.outputs.work == '1'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: whisper-small-v1
+
+      - name: Whisper o'rnatish
+        if: steps.pull.outputs.work == '1'
+        run: pip install -q faster-whisper numpy
+
       - name: Montaj va yuklash
         if: steps.pull.outputs.work == '1'
+        env:
+          NEX_PYTHON: python
         run: node --env-file=.env src/nex/run.js
 
       - name: Tozalash

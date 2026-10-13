@@ -72,7 +72,7 @@ async function processRun(dir) {
   log(`================ NEX ZAELON: ${st.file}${st.plan ? ` (rejada: ${st.plan.title}, ${st.plan.genre})` : ''}`);
 
   const steps = [
-    { name: 'Tinglovchi', out: 'listen.json', fn: () => runListen(audio, dir, st.plan) },
+    { name: 'Tinglovchi', out: 'listen.json', fn: () => runListen(audio, dir, st.plan, path.parse(st.file || '').name.replace(/\s*\(\d+\)$/, '')) },
     { name: 'Vaqt va shablon', out: 'slot.json', fn: () => {
       const listen = readJson(f('listen.json'));
       const slot = chooseSlot(st.plan);
