@@ -78,7 +78,15 @@ export async function runListen(audioFile, runDir, planEntry, fileTitle = '') {
   }
 
   // Vaqtlarni Whisper bilan aniqlash (naqarot atrofida — videoga aynan shu qism kiradi)
-  ({ lyrics, chorus } = await syncLyrics(audioFile, runDir, lyrics, chorus, dur, r.language));
+  const sync = await syncLyrics(audioFile, runDir, lyrics, chorus, dur, r.language);
+  ({ lyrics, chorus } = sync);
+  // Vaqti tasdiqlanmagan lirika ekranga chiqmaydi: noto'g'ri subtitr — lirikasiz videodan yomonroq
+  let lyricsHidden = false;
+  if (sync.ok === false) {
+    lyricsHidden = true;
+    lyrics = [];
+    log('   ⚠️  Lirika vaqtini tasdiqlab bo\'lmadi — video LIRIKASIZ chiqadi (noto\'g\'ri subtitr bo\'lmasin)');
+  }
 
   const result = {
     duration: dur,
@@ -90,6 +98,7 @@ export async function runListen(audioFile, runDir, planEntry, fileTitle = '') {
     coverPrompt: cleanText(r.coverPrompt || `${r.mood || 'moody'} atmospheric night scene`),
     chorus,
     lyrics,
+    lyricsHidden,
   };
   writeJson(out, result);
   fs.rmSync(small, { force: true });
@@ -120,11 +129,11 @@ const tidy = (lyrics, dur) => lyrics.sort((a, b) => a.start - b.start).map((l, i
 });
 
 export async function syncLyrics(audioFile, runDir, lyrics, chorus, dur, language) {
-  if (config.mock || process.env.NEX_ALIGN === '0' || !lyrics.length) return { lyrics, chorus };
+  if (config.mock || process.env.NEX_ALIGN === '0' || !lyrics.length) return { lyrics, chorus, ok: null };
   const ws = Math.max(0, chorus.start - 4);
   const we = Math.min(dur, chorus.start + 52);
   const inside = lyrics.filter((l) => l.start < we && l.end > ws);
-  if (!inside.length) return { lyrics, chorus };
+  if (!inside.length) return { lyrics, chorus, ok: null };
   const wav = path.join(runDir, 'sync.wav');
   const job = path.join(runDir, 'sync-job.json');
   const res = path.join(runDir, 'sync.json');
@@ -134,13 +143,16 @@ export async function syncLyrics(audioFile, runDir, lyrics, chorus, dur, languag
   const r = await py([ALIGN, job, res], 8 * 60_000);
   fs.rmSync(wav, { force: true });
   if (!r.ok || !fs.existsSync(res)) {
-    log(`   ↪️  Sinxronlash o'tkazib yuborildi (${(r.err || 'whisper yo\'q').split('\n').filter(Boolean).pop()?.slice(0, 90)})`);
-    return { lyrics, chorus };
+    const why = (r.err || 'whisper yo\'q').split('\n').filter(Boolean).pop()?.slice(0, 90);
+    log(`   ↪️  Sinxronlash o'tkazib yuborildi (${why})`);
+    // Whisper o'rnatilmagan (laptop) -> Gemini vaqtlari qoladi; boshqa xato -> ishonchsiz
+    return { lyrics, chorus, ok: /ENOENT|ModuleNotFoundError|No module/.test(r.err || '') ? null : false };
   }
   const a = JSON.parse(fs.readFileSync(res, 'utf8'));
-  if (!a.lines?.length || a.words < 3) {
-    log('   ↪️  Whisper ovozni deyarli eshitmadi — Gemini vaqtlari qoldi');
-    return { lyrics, chorus };
+  // Whisper musiqada ba'zan "so'z to'qiydi" (bir zumda bir nechta so'z) — buni haqiqiy ovoz deb hisoblamaymiz
+  if (!a.lines?.length || a.words < 6 || (a.span ?? 99) < 4 || (a.mode === 'whisper' && a.words < 10)) {
+    log('   ↪️  Whisper ovozni deyarli eshitmadi');
+    return { lyrics, chorus, ok: false };
   }
   const aligned = a.lines.map((l) => ({ start: Number(l.start), end: Number(l.end), text: cleanText(l.text) }))
     .filter((l) => l.text && Number.isFinite(l.start) && Number.isFinite(l.end));
@@ -155,7 +167,7 @@ export async function syncLyrics(audioFile, runDir, lyrics, chorus, dur, languag
   const newChorus = first ? { ...chorus, start: first.start, end: Math.max(chorus.end, first.start + 25) } : chorus;
   log(`   🎯 Sinxronlash (${a.mode === 'whisper' ? 'Whisper matni' : 'Gemini matni + Whisper vaqti'}): ${aligned.length} qator, ` +
     `mos ${(a.ratio * 100).toFixed(0)}%, o'rtacha siljish ${moved.toFixed(1)}s, ${((Date.now() - t0) / 1000).toFixed(0)}s`);
-  return { lyrics: next, chorus: newChorus };
+  return { lyrics: next, chorus: newChorus, ok: a.mode === 'whisper' || a.ratio >= 0.4, ratio: a.ratio };
 }
 
 // Gemini ba'zan javobni massiv yoki {"song": {...}} ichiga o'raydi — ochib olamiz

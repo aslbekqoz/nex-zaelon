@@ -29,21 +29,31 @@ def main():
     import numpy as np
     with wave.open(job['audio'], 'rb') as f:
         pcm = np.frombuffer(f.readframes(f.getnframes()), dtype=np.int16).astype(np.float32) / 32768.0
-    segs, _ = model.transcribe(pcm, language=lang, word_timestamps=True, initial_prompt=prompt or None,
-                               condition_on_previous_text=False, vad_filter=True, beam_size=5,
-                               vad_parameters={'min_silence_duration_ms': 300, 'speech_pad_ms': 150})
     off = float(job.get('offset', 0))
-    ww = []  # (so'z, boshlanish, tugash)
-    for s in segs:
-        for k, w in enumerate(s.words or []):
-            n = norm(w.word)
-            if not n:
-                continue
-            st = w.start
-            # Whisper pauzadan keyingi birinchi so'zning boshini pauza ichiga "yoyib" yuboradi — qisqartiramiz
-            if (k == 0 or (w.start - s.words[k - 1].end) < 0.05) and (w.end - w.start) > 1.2:
-                st = w.end - 0.7
-            ww.append((n, st + off, w.end + off, w.word.strip()))
+
+    def words(vad):
+        segs, _ = model.transcribe(pcm, language=lang, word_timestamps=True, initial_prompt=prompt or None,
+                                   condition_on_previous_text=False, vad_filter=vad, beam_size=5,
+                                   vad_parameters={'min_silence_duration_ms': 300, 'speech_pad_ms': 150} if vad else None)
+        out = []  # (so'z, boshlanish, tugash, asl so'z)
+        for s in segs:
+            for k, w in enumerate(s.words or []):
+                n = norm(w.word)
+                if not n:
+                    continue
+                st = w.start
+                # Whisper pauzadan keyingi birinchi so'zning boshini pauza ichiga "yoyib" yuboradi — qisqartiramiz
+                if (k == 0 or (w.start - s.words[k - 1].end) < 0.05) and (w.end - w.start) > 1.2:
+                    st = w.end - 0.7
+                out.append((n, st + off, w.end + off, w.word.strip()))
+        return out
+
+    # 1) ovoz detektori (VAD) bilan — pauzalar aniq; 2) qo'shiq zich bo'lsa VAD ovozni "ko'rmaydi" -> VAD'siz
+    ww = words(True)
+    if len(ww) < max(6, len(prompt.split()) // 4):
+        alt = words(False)
+        if len(alt) > len(ww):
+            ww = alt
 
     lines = job['lines']
     gw = [(i, norm(t)) for i, l in enumerate(lines) for t in l['text'].split() if norm(t)]
@@ -71,6 +81,7 @@ def main():
             used.add(best)
 
     ratio = len(match) / max(1, len(gw))
+    span = (ww[-1][2] - ww[0][1]) if ww else 0  # eshitilgan ovoz davomiyligi (gallyutsinatsiyani ajratish uchun)
     if len(ww) >= 4 and ratio < 0.35:
         # Gemini matni umuman mos kelmadi -> Whisper'ning o'z qatorlari (vaqti aniq)
         res, cur = [], []
@@ -81,7 +92,7 @@ def main():
             cur.append(w)
         if cur:
             res.append({'start': cur[0][1], 'end': cur[-1][2], 'text': ' '.join(x[3] for x in cur)})
-        json.dump({'mode': 'whisper', 'ratio': ratio, 'words': len(ww), 'lines': res}, open(out, 'w', encoding='utf-8'), ensure_ascii=False)
+        json.dump({'mode': 'whisper', 'ratio': ratio, 'words': len(ww), 'span': span, 'lines': res}, open(out, 'w', encoding='utf-8'), ensure_ascii=False)
         return
 
     res = []
@@ -110,7 +121,7 @@ def main():
             n = next((res[k]['start'] for k in range(i + 1, len(res)) if res[k]['start'] is not None), None)
             r['start'] = round(p + 0.1, 2)
             r['end'] = round(min(n - 0.1, p + 3.0) if n else p + 3.0, 2)
-    json.dump({'mode': 'aligned', 'ratio': ratio, 'words': len(ww), 'lines': res}, open(out, 'w', encoding='utf-8'), ensure_ascii=False)
+    json.dump({'mode': 'aligned', 'ratio': ratio, 'words': len(ww), 'span': span, 'lines': res}, open(out, 'w', encoding='utf-8'), ensure_ascii=False)
 
 
 if __name__ == '__main__':

@@ -120,7 +120,9 @@ async function processRun(dir) {
   const meta = readJson(f('metadata.json'));
   const when = new Date(readJson(f('slot.json')).publishAt).toLocaleString('sv-SE', { timeZone: 'Asia/Tashkent' }).slice(0, 16);
   log(`🎉 TAYYOR: ${up.url || '(mock)'} — e'lon ${when}`);
-  if (up.url) await notify(`🎵 <b>Nex Zaelon</b>: rejalashtirildi\n${meta.title}\n📅 ${when} (Toshkent)\n${up.url}`);
+  const hidden = readJson(f('listen.json')).lyricsHidden;
+  if (up.url) await notify(`🎵 <b>Nex Zaelon</b>: rejalashtirildi\n${meta.title}\n📅 ${when} (Toshkent)\n${up.url}` +
+    (hidden ? '\n⚠️ Lirika vaqti aniqlanmadi — video lirikasiz chiqadi. Yoqmasa, Studio\'da o\'chirib, boshqa variantini yuboring.' : ''));
   return true;
 }
 
