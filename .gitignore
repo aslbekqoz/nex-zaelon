@@ -1,0 +1,15 @@
+node_modules/
+.env
+runs/
+done.txt
+cron.log
+stats.json
+nex-inbox/
+nex-runs/
+.env*
+!.env.example
+*.log
+client_secret*.json
+credentials*.json
+*token*.json
+assets/sfx/

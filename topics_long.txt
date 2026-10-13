@@ -1,0 +1,7 @@
+# Uzun (16:9) videolar uchun mavzular. Har qatorga bitta, inglizcha (Wikipedia maqolasi nomi).
+# Tizim yuqoridan pastga qarab oladi; kamayib qolsa, o'zi yangilarini qo'shadi.
+Honey bee
+Shark
+Moon
+Human brain
+Elephant

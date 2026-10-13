@@ -1,0 +1,6 @@
+# Har qatorga bitta mavzu (inglizcha). Tizim yuqoridan pastga qarab oladi.
+# Tayyor bo'lgan mavzular done.txt ga ko'chiriladi.
+Mantis shrimp
+Tardigrade
+Saturn
+Blue whale

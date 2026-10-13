@@ -1,0 +1,25 @@
+{
+  "_izoh": "Nex Zaelon haftalik rejasi (Claude Docs dagi jadvaldan). Audio fayl nomi 'title' ga mos kelsa (masalan 'Rainy Window.mp3'), janr va shablon shu yerdan olinadi.",
+  "tracks": [
+    { "title": "Rainy Window", "genre": "Lofi hip-hop", "template": 2, "date": "2026-10-10", "time": "11:30" },
+    { "title": "Text Me Back", "genre": "Sad pop", "template": 1, "date": "2026-10-10", "time": "17:30" },
+    { "title": "Night Drive", "genre": "Phonk", "template": 4, "date": "2026-10-10", "time": "23:30" },
+    { "title": "Summer We Lost", "genre": "Indie rock", "template": 2, "date": "2026-10-11", "time": "11:30" },
+    { "title": "Cold Room", "genre": "Sad rap", "template": 3, "date": "2026-10-11", "time": "17:30" },
+    { "title": "Neon Heart", "genre": "Synthwave", "template": 4, "date": "2026-10-11", "time": "23:30" },
+    { "title": "Slow Motion", "genre": "R&B", "template": 1, "date": "2026-10-12", "time": "11:30" },
+    { "title": "Old Letters", "genre": "Acoustic", "template": 2, "date": "2026-10-12", "time": "17:30" },
+    { "title": "Тишина", "genre": "Russian sad rap", "template": 3, "date": "2026-10-12", "time": "23:30" },
+    { "title": "Tokyo 4AM", "genre": "City pop", "template": 1, "date": "2026-10-13", "time": "11:30" },
+    { "title": "Glitch Girl", "genre": "Hyperpop", "template": 4, "date": "2026-10-13", "time": "17:30" },
+    { "title": "Coffee at Midnight", "genre": "Jazz-hop", "template": 2, "date": "2026-10-13", "time": "23:30" },
+    { "title": "Paper Planes", "genre": "Bedroom pop", "template": 1, "date": "2026-10-14", "time": "11:30" },
+    { "title": "Concrete", "genre": "Boom bap", "template": 3, "date": "2026-10-14", "time": "17:30" },
+    { "title": "Bad Habits", "genre": "Emo pop-punk", "template": 4, "date": "2026-10-14", "time": "23:30" },
+    { "title": "Northern Lights", "genre": "Dream pop", "template": 2, "date": "2026-10-15", "time": "11:30" },
+    { "title": "Afterparty", "genre": "Deep house", "template": 4, "date": "2026-10-15", "time": "17:30" },
+    { "title": "Kuz kechasi", "genre": "Uzbek pop", "template": 1, "date": "2026-10-15", "time": "23:30" },
+    { "title": "Shadows", "genre": "Dark trap", "template": 3, "date": "2026-10-16", "time": "11:30" },
+    { "title": "Golden Hour", "genre": "Afrobeats", "template": 1, "date": "2026-10-16", "time": "17:30" }
+  ]
+}

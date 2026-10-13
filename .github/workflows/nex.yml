@@ -1,0 +1,72 @@
+# NEX ZAELON — bulutda avtomatik ishlaydi (laptop kerak emas).
+# Har 30 daqiqada: Telegram botga yuborilgan qo'shiqlarni oladi -> montaj -> YouTube'ga rejalashtirib yuklaydi.
+# Kalitlar faqat GitHub Secrets'da turadi (repo ichida hech qachon yo'q).
+name: Nex Zaelon
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: nex-zaelon
+  cancel-in-progress: false
+
+jobs:
+  nex:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Kutubxonalar
+        run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+
+      - name: Kalitlar (.env faqat shu server ichida yaratiladi)
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+        run: |
+          node -e '
+            const s = JSON.parse(process.env.SECRETS_JSON); delete s.github_token;
+            const line = ([k, v]) => k + "=" + (/^[\w.\-:\/+=,@%]*$/.test(v) ? v : JSON.stringify(v));
+            require("fs").writeFileSync(".env", Object.entries(s).map(line).join("\n") + "\n", { mode: 0o600 });
+          '
+
+      - name: Oldingi holat (qaysi qo'shiqlar qilingan)
+        uses: actions/cache/restore@v4
+        with:
+          path: nex-runs
+          key: nex-state-${{ github.run_id }}
+          restore-keys: nex-state-
+
+      - name: Telegram'dan yangi qo'shiqlar
+        id: pull
+        run: node --env-file=.env src/nex/cloud.js pull
+
+      - name: ffmpeg
+        if: steps.pull.outputs.work == '1'
+        run: which ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
+
+      - name: Montaj va yuklash
+        if: steps.pull.outputs.work == '1'
+        run: node --env-file=.env src/nex/run.js
+
+      - name: Tozalash
+        if: always() && steps.pull.outputs.work == '1'
+        run: node src/nex/cloud.js cleanup
+
+      - name: Holatni saqlash
+        if: always() && steps.pull.outputs.work == '1'
+        uses: actions/cache/save@v4
+        with:
+          path: nex-runs
+          key: nex-state-${{ github.run_id }}
+
+      - name: Log
+        if: always()
+        run: tail -n 60 nex-runs/*/log.txt 2>/dev/null | tail -n 120 || true

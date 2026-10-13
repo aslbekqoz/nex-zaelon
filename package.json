@@ -1,0 +1,25 @@
+{
+  "name": "youtube-agent",
+  "version": "1.0.0",
+  "description": "5 agentli YouTube Shorts tizimi: tadqiqot, ssenariy, video, Telegram ruxsat, YouTube yuklash",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20.6"
+  },
+  "scripts": {
+    "start": "node --env-file=.env src/orchestrator.js",
+    "mock": "MOCK=1 node src/orchestrator.js",
+    "auth": "node --env-file=.env src/tools/auth-youtube.js",
+    "telegram-id": "node --env-file=.env src/tools/telegram-id.js",
+    "check": "node --env-file=.env src/tools/check.js",
+    "stats": "node --env-file=.env src/tools/stats.js",
+    "long": "node --env-file=.env src/orchestrator.js --long",
+    "nex": "node --env-file=.env src/nex/run.js",
+    "nex:auth": "node --env-file=.env src/tools/auth-nex.js"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0",
+    "msedge-tts": "^2.0.0"
+  }
+}
