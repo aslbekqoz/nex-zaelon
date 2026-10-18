@@ -72,7 +72,7 @@ async function processRun(dir) {
   log(`================ NEX ZAELON: ${st.file}${st.plan ? ` (rejada: ${st.plan.title}, ${st.plan.genre})` : ''}`);
 
   const steps = [
-    { name: 'Tinglovchi', out: 'listen.json', fn: () => runListen(audio, dir, st.plan, path.parse(st.file || '').name.replace(/\s*\(\d+\)$/, '')) },
+    { name: 'Tinglovchi', out: 'listen.json', fn: () => runListen(audio, dir, st.plan, path.parse(st.file || '').name.replace(/\s*\((take\s*)?\d+\)\s*$/i, '').trim()) },
     { name: 'Vaqt va shablon', out: 'slot.json', fn: () => {
       const listen = readJson(f('listen.json'));
       const slot = chooseSlot(st.plan);
@@ -91,16 +91,34 @@ async function processRun(dir) {
       writeJson(f('metadata.json'), m);
       log(`📝 ${m.title}`);
     } },
-    { name: 'YouTube', out: 'upload.json', fn: () => runUpload(dir, new Date(readJson(f('slot.json')).publishAt)) },
+    { name: 'YouTube', out: 'upload.json', fn: () => {
+      // yuklash kechikib, rejadagi vaqt o'tib ketgan bo'lsa — yangi bo'sh vaqt olinadi
+      const sl = readJson(f('slot.json'));
+      if (Date.parse(sl.publishAt) < Date.now() + 30 * 60_000) {
+        const fresh = chooseSlot(null);
+        writeJson(f('slot.json'), { ...sl, publishAt: fresh.toISOString() });
+        log(`📅 Vaqt o'tib ketgan edi — yangi e'lon: ${fresh.toLocaleString('sv-SE', { timeZone: 'Asia/Tashkent' })}`);
+      }
+      return runUpload(dir, new Date(readJson(f('slot.json')).publishAt));
+    } },
   ];
 
   for (const step of steps) {
     if (exists(f(step.out))) continue;
+    if (quotaHit && step.name === 'YouTube') { status('failed', step.name, { error: 'YouTube kunlik limiti — keyinroq yuklanadi' }); return false; }
     status('running', step.name);
     try {
       await retry(step.name, step.fn, { tries: 3, waits: config.mock ? [500, 1000] : [20_000, 60_000] });
       if (!exists(f(step.out))) throw new Error(`${step.out} yaratilmadi`);
     } catch (err) {
+      // YouTube kunlik yuklash limiti (taxminan 6 ta video/kun): urinish hisoblanmaydi, ertaga o'zi davom etadi
+      if (step.name === 'YouTube' && /quota|uploadLimitExceeded|rateLimitExceeded|exceeded the number of videos/i.test(String(err.message))) {
+        status('failed', step.name, { error: 'YouTube kunlik limiti — keyinroq yuklanadi' });
+        log('⏸  YouTube kunlik yuklash limiti tugadi — qolganlari keyingi ishga tushishda yuklanadi');
+        if (!quotaHit) await notify('⏸ <b>Nex Zaelon</b>: YouTube bugungi yuklash limiti tugadi. Tayyor videolar ertaga avtomatik yuklanadi.');
+        quotaHit = true;
+        return false;
+      }
       // Har ishga tushishda qayta urinadi; 6 marta bo'lmasa — to'xtatib, sizga aytadi
       const attempts = (readJson(stFile).attempts || 0) + 1;
       const giveUp = attempts >= 6;
@@ -131,6 +149,10 @@ const jobs = pending();
 if (!jobs.length) console.log(`[${new Date().toISOString()}] Nex: yangi qo'shiq yo'q (nex-inbox/ bo'sh).`);
 let ok = 0;
 let uploadedThisRun = 0;
+let quotaHit = false;
 if (jobs.length) await loadRemoteSlots();
-for (const dir of jobs) if (await processRun(dir)) ok++;
+for (const dir of jobs) {
+  // limit tugagan bo'lsa: yangi qo'shiqlarni montaj qilib qo'yamiz (keyin tez yuklanadi), lekin YouTube'ga urinmaymiz
+  if (await processRun(dir)) ok++;
+}
 if (jobs.length) console.log(`Nex: ${ok}/${jobs.length} ta qo'shiq tayyor.`);
