@@ -9,11 +9,16 @@ import { log } from '../lib/log.js';
 import { retry } from '../lib/util.js';
 
 const STYLE = {
-  1: 'dreamy aesthetic album cover art, soft pastel pink and violet light, gentle glow, cinematic, high detail',
-  2: 'dark moody cinematic nature photograph at night, mist, deep shadows, atmospheric, realistic photo, 35mm film look',
-  3: 'minimalist moody album cover art, dark background, dramatic rim lighting, high contrast, cinematic',
+  // 1: planshet ekranidagi kvadrat albom muqovasi
+  1: 'square album cover artwork, dreamy aesthetic, soft pastel pink and violet light, gentle glow, cinematic, high detail',
+  // 3: CD diskiga oq-qora bosiladi — kontrastli, grafik muqova
+  3: 'striking minimalist album cover art, bold graphic shapes, dramatic light and shadow, high contrast, works well in black and white',
   4: 'neon synthwave cyberpunk scene, glowing magenta and cyan lights, retro-futuristic, chrome reflections, high detail',
 };
+// 2: fon — har doim shu okean manzarasi (qo'shiq kayfiyati faqat ozgina qo'shiladi)
+const OCEAN = 'Vertical photo, dark moody ocean at dusk, heavy waves slowly crashing, warm golden light catching the foam, ' +
+  'grainy film texture, desaturated teal and charcoal colors, overcast heavy sky, shot from a tripod on the shore, ' +
+  'melancholic and calm atmosphere, the lower third of the frame is darker calm water, realistic photograph, 35mm film';
 const NEG = 'no text, no letters, no words, no logo, no watermark, no signature';
 
 const cfUrl = (m) => `https://api.cloudflare.com/client/v4/accounts/${config.cfAccountId}/ai/run/@cf/black-forest-labs/${m}`;
@@ -54,7 +59,9 @@ async function cfImage(prompt, out) {
 
 export async function runCover(runDir, listen, template) {
   const out = path.join(runDir, 'cover.jpg');
-  const prompt = `${listen.coverPrompt}. Mood: ${listen.mood || listen.genre}. ${STYLE[template]}. ${NEG}`;
+  const prompt = template === 2
+    ? `${OCEAN}. Mood: ${listen.mood || 'melancholic'}. No people. ${NEG}`
+    : `${listen.coverPrompt}. Mood: ${listen.mood || listen.genre}. ${STYLE[template] || STYLE[1]}. ${NEG}`;
   log(`🎨 Muqova (shablon ${template})`);
   const tmp = path.join(runDir, 'cover_raw.jpg');
   const model = await retry('Muqova', () => cfImage(prompt, tmp), { tries: 3, waits: [5_000, 15_000] });

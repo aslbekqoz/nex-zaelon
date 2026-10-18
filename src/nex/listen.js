@@ -48,13 +48,12 @@ export async function runListen(audioFile, runDir, planEntry, fileTitle = '') {
         const j = unwrap(raw);
         if (j.instrumental === true) return true;
         const n = Array.isArray(j.lyrics) ? j.lyrics.filter((l) => l && l.text).length : 0;
-        return n >= 4 ? true : `lirika ${n} qator`;
+        const ch = j.chorus && Number.isFinite(Number(j.chorus.start));
+        return n >= 2 || ch ? true : `lirika ${n} qator, naqarot yo'q`;
       },
     });
     r = unwrap(r);
-    if (r.instrumental !== true && !(Array.isArray(r.lyrics) && r.lyrics.length >= 4)) {
-      throw new Error('Gemini lirikani aniqlay olmadi — keyinroq qayta urinaman');
-    }
+
   }
 
   // Tekshirish va tozalash: vaqtlar ketma-ket, qo'shiq ichida, bo'sh qatorlarsiz
@@ -129,7 +128,8 @@ const tidy = (lyrics, dur) => lyrics.sort((a, b) => a.start - b.start).map((l, i
 });
 
 export async function syncLyrics(audioFile, runDir, lyrics, chorus, dur, language) {
-  if (config.mock || process.env.NEX_ALIGN === '0' || !lyrics.length) return { lyrics, chorus, ok: null };
+  // Lirika endi videoda ko'rsatilmaydi -> sinxronlash faqat NEX_ALIGN=1 bo'lsa
+  if (config.mock || process.env.NEX_ALIGN !== '1' || !lyrics.length) return { lyrics, chorus, ok: null };
   const ws = Math.max(0, chorus.start - 4);
   const we = Math.min(dur, chorus.start + 52);
   const inside = lyrics.filter((l) => l.start < we && l.end > ws);

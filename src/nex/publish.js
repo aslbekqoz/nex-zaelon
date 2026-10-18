@@ -17,7 +17,7 @@ export function buildMetadata(listen, index) {
   const line = listen.bestLine;
   const titles = [
     line ? `"${line}" — ${listen.title} | ${nex.channelName}` : null,
-    `${listen.title} (lyrics) — ${listen.genre} | ${nex.channelName}`,
+    `${listen.title} — ${listen.genre} | ${nex.channelName}`,
     `POV: it's 2am and this song hits different — ${listen.title}`,
   ].filter(Boolean);
   let title = titles[index % titles.length];
