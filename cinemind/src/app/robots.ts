@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 const PRIVATE = [
   "/account", "/admin", "/studio", "/watchlist", "/recommendations", "/onboarding",
   "/login", "/register", "/forgot-password", "/reset-password",
-  "/confirm-email", "/verify-email", "/confirm-email-change", "/avatars/",
+  "/confirm-email", "/verify-email", "/confirm-email-change", "/avatars/", "/api/",
 ];
 
 export default function robots(): MetadataRoute.Robots {
