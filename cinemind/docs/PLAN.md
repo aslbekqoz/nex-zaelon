@@ -200,6 +200,13 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] The header search suggests up to 6 movies (English, Uzbek or original title) and 3 people as you type, from the local catalogue (`GET /api/suggest`, briefly cacheable); prefix matches first, then similarity, then popularity
 - [x] ARIA combobox: arrow keys, Enter, Escape, mouse; "See all results" opens the full search (which also imports from TMDB); without JavaScript it's still a plain search form
 
+### Follow-up: movie reviews ✅
+- [x] Signed-in users with a confirmed email write one review per movie (20–4000 characters, optional spoiler flag), edit or delete it; their own 1–10 rating shows on the review; 20 saves per hour (migration 014)
+- [x] Text is tidied (line breaks kept, extra blank lines collapsed), invisible/control characters rejected (emoji joiners allowed), rendered as plain text
+- [x] Spoiler reviews are folded behind "show review"; reviews from disabled accounts aren't shown
+- [x] **Admin → Reviews**: newest or hidden reviews; hiding keeps a review visible to its author with a note; all audited
+- [x] Reviews are part of "Download my data" and are deleted with the account
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).

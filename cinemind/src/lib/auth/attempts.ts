@@ -11,6 +11,7 @@ const RESET_PER_IP = { max: 10, windowMs: 60 * 60_000 };
 const VERIFY_PER_EMAIL = { max: 3, windowMs: 60 * 60_000 };
 const EMAIL_CHANGE_PER_ACCOUNT = { max: 3, windowMs: 60 * 60_000 };
 const AVATAR_PER_ACCOUNT = { max: 10, windowMs: 60 * 60_000 };
+const REVIEW_PER_ACCOUNT = { max: 20, windowMs: 60 * 60_000 };
 
 /**
  * Client IP, only when TRUST_PROXY_HEADERS=1 (i.e. behind a proxy that sets X-Forwarded-For).
@@ -24,7 +25,7 @@ export async function clientIp(): Promise<string | null> {
   return forwarded || h.get("x-real-ip")?.trim() || null;
 }
 
-type Kind = "login" | "register" | "reset" | "verify" | "email_change" | "avatar";
+type Kind = "login" | "register" | "reset" | "verify" | "email_change" | "avatar" | "review";
 
 async function recent(column: "email" | "ip", value: string, kind: Kind, windowMs: number) {
   const { rows } = await query<{ success: boolean; at: Date }>(
@@ -81,6 +82,12 @@ export async function emailChangeBlocked(email: string) {
 /** Limits profile picture uploads per account; processing images is relatively expensive. */
 export async function avatarUploadBlocked(email: string) {
   const r = evaluateVolume(await recent("email", email, "avatar", AVATAR_PER_ACCOUNT.windowMs), new Date(), AVATAR_PER_ACCOUNT);
+  return r.blocked ? retryMessage(r.retryAfterMs) : null;
+}
+
+/** Writing and editing reviews, per account. */
+export async function reviewBlocked(email: string) {
+  const r = evaluateVolume(await recent("email", email, "review", REVIEW_PER_ACCOUNT.windowMs), new Date(), REVIEW_PER_ACCOUNT);
   return r.blocked ? retryMessage(r.retryAfterMs) : null;
 }
 

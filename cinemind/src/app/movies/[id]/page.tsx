@@ -7,7 +7,7 @@ import { PersonCard } from "@/components/PersonCard";
 import { Poster } from "@/components/Poster";
 import { RatingWidget } from "@/components/RatingWidget";
 import { SubmitButton } from "@/components/SubmitButton";
-import { getCurrentUser } from "@/lib/auth/session";
+import { getCurrentUser, needsEmailConfirmation } from "@/lib/auth/session";
 import { getMovie, getMovieCredits, getSimilarMovies } from "@/lib/movies/repository";
 import type { Credit } from "@/lib/movies/types";
 import { ensureDetails } from "@/lib/movies/sync";
@@ -15,6 +15,9 @@ import { getUserRating } from "@/lib/ratings/repository";
 import { displayTitle } from "@/lib/movies/types";
 import { setWatched, toggleWatchlist } from "@/lib/watchlist/actions";
 import { getWatchlistStatus } from "@/lib/watchlist/repository";
+import { ReviewCard } from "@/components/ReviewList";
+import { ReviewForm } from "@/components/ReviewForm";
+import { getOwnReview, listMovieReviews } from "@/lib/reviews/repository";
 import { jsonLdScript, movieJsonLd, OG_SITE, shareImage } from "@/lib/seo";
 import { appUrl } from "@/lib/site";
 
@@ -85,9 +88,13 @@ export default async function MoviePage({ params }: Props) {
     getMovieCredits(id),
   ]);
   if (!movie) notFound();
-  const [status, userRating] = user
-    ? await Promise.all([getWatchlistStatus(user.id, movie.id), getUserRating(user.id, movie.id)])
-    : [{ saved: false, watched: false }, null];
+  const [[status, userRating, ownReview], reviews] = await Promise.all([
+    user
+      ? Promise.all([getWatchlistStatus(user.id, movie.id), getUserRating(user.id, movie.id), getOwnReview(user.id, movie.id)])
+      : Promise.resolve([{ saved: false, watched: false }, null, null] as const),
+    listMovieReviews(movie.id),
+  ]);
+  const otherReviews = reviews.reviews.filter((r) => r.userId !== user?.id);
 
   const title = displayTitle(movie);
   const crewByJob = groupCrew(credits.crew);
@@ -243,6 +250,50 @@ export default async function MoviePage({ params }: Props) {
           </div>
         </section>
       ) : null}
+
+      <section className="section" id="reviews">
+        <div className="container reviews">
+          <div className="section-head">
+            <h2>
+              Reviews{reviews.total ? <span className="faint"> · {reviews.total}</span> : null}
+            </h2>
+          </div>
+          {user ? (
+            needsEmailConfirmation(user) ? (
+              <p className="muted">
+                <Link href={`/confirm-email?next=${encodeURIComponent(`${path}#reviews`)}`} className="link">
+                  Confirm your email
+                </Link>{" "}
+                to write a review.
+              </p>
+            ) : (
+              <div className="own-review">
+                {ownReview ? <ReviewCard review={ownReview} own /> : null}
+                <ReviewForm
+                  movieId={movie.id}
+                  existing={ownReview ? { body: ownReview.body, spoilers: ownReview.spoilers } : null}
+                />
+              </div>
+            )
+          ) : (
+            <p className="muted">
+              <Link href={`/login?next=${encodeURIComponent(`${path}#reviews`)}`} className="link">
+                Sign in
+              </Link>{" "}
+              to write a review.
+            </p>
+          )}
+          {otherReviews.length ? (
+            <div className="review-list">
+              {otherReviews.map((r) => (
+                <ReviewCard key={r.userId} review={r} />
+              ))}
+            </div>
+          ) : !ownReview ? (
+            <p className="faint">No reviews yet. Be the first to share what you thought.</p>
+          ) : null}
+        </div>
+      </section>
 
       <MovieRow title="More like this" movies={similar} />
     </>
