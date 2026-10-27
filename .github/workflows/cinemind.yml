@@ -57,7 +57,10 @@ jobs:
 
       - run: npm run build
 
-      - name: Smoke test the production server
+      - name: Install Chromium for the accessibility audit
+        run: npx playwright-core install --with-deps chromium
+
+      - name: Smoke test and accessibility audit of the production server
         env:
           PORT: 3000
           APP_URL: http://localhost:3000
@@ -77,6 +80,8 @@ jobs:
             [ "$code" = 307 ] || fail=1
           done
           if [ "$fail" != 0 ]; then cat server.log; exit 1; fi
+          # axe-core on public, account, admin and studio pages
+          BASE_URL=http://localhost:3000 npm run a11y
 
   docker:
     name: Docker image builds

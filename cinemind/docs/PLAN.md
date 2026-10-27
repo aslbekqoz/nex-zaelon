@@ -212,6 +212,7 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 ### Follow-up: accessibility pass ✅
 - [x] axe-core (WCAG 2.1 A/AA + best practices) on 22 public, account, admin and studio pages: 0 violations (was: faint text below 4.5:1 contrast, a primary button whose text inherited a link colour, the logo's accessible name not matching its text, two unnamed search landmarks, audit-log links told apart only by colour)
 - [x] "Skip to content" link as the first stop on every page; focus ring on button-styled file pickers
+- [x] `npm run a11y` (`scripts/a11y.mjs`, playwright-core + axe-core) audits 21 public and signed-in pages and fails on any finding; CI runs it against the production build
 
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
