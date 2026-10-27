@@ -11,6 +11,7 @@ const source: ExportSource = {
   pendingEmailChange: null,
   sessions: [{ userAgent: "Mozilla/5.0 (X11; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0", createdAt: d("2026-04-01T00:00:00Z"), lastSeenAt: d("2026-04-02T00:00:00Z"), expiresAt: d("2026-05-01T00:00:00Z") }],
   avatar: { contentType: "image/webp", updatedAt: d("2026-04-02T00:00:00Z"), image: new Uint8Array([1, 2, 3]) },
+  reviews: [{ movieId: 9, title: "Heat", body: "Tense and brilliant.", spoilers: true, hidden: false, createdAt: d("2026-03-02T00:00:00Z"), updatedAt: d("2026-03-02T00:00:00Z") }],
   activity: [
     { action: "auth.name_changed", createdAt: d("2026-04-03T00:00:00Z"), details: { from: "A", to: "Ada" } },
     { action: "auth.logout", createdAt: d("2026-04-04T00:00:00Z"), details: {} },
@@ -29,6 +30,10 @@ test("the export holds the user's data with ISO dates and absolute movie links",
   assert.equal(out.ratings[0].rating, 9);
   assert.equal(out.ratings[0].url, "https://cinemind.uz/movies/9");
   assert.equal(out.profilePicture?.dataBase64, "AQID");
+  assert.deepEqual(out.reviews, [{
+    title: "Heat", review: "Tense and brilliant.", containsSpoilers: true, hiddenByModerator: false,
+    writtenAt: "2026-03-02T00:00:00.000Z", updatedAt: "2026-03-02T00:00:00.000Z", url: "https://cinemind.uz/movies/9",
+  }]);
   assert.deepEqual(out.signedInSessions, [{
     device: "Firefox on Linux", userAgent: source.sessions[0].userAgent, signedInAt: "2026-04-01T00:00:00.000Z",
     lastActiveAt: "2026-04-02T00:00:00.000Z", expiresAt: "2026-05-01T00:00:00.000Z",

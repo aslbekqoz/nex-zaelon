@@ -471,3 +471,24 @@ a.stat-card:hover { border-color: var(--accent); }
 }
 .device-info { min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 .device-meta { flex-basis: 100%; font-size: 13px; }
+
+/* ---------- Reviews ---------- */
+.reviews { max-width: 820px; }
+.review-list, .own-review { display: grid; gap: 14px; margin-top: 14px; }
+.own-review { margin-bottom: 8px; }
+.review { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; background: var(--bg-elevated); }
+.review.is-hidden { border-style: dashed; opacity: .8; }
+.review-head { display: flex; align-items: center; gap: 10px; }
+.review-meta { display: grid; min-width: 0; flex: 1; font-size: 14px; }
+.review-meta strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.review-rating { color: var(--accent); font-weight: 650; font-size: 14px; white-space: nowrap; }
+.review-body { margin: 12px 0 0; white-space: pre-line; overflow-wrap: anywhere; line-height: 1.6; }
+.review-note { margin: 10px 0 0; font-size: 13px; color: var(--danger); }
+.review-spoiler summary { margin-top: 12px; cursor: pointer; color: var(--text-muted); font-size: 14px; }
+.review-form { margin-top: 0; }
+.review-form textarea { resize: vertical; min-height: 120px; font: inherit; line-height: 1.5; }
+.review-count { justify-self: end; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.review-check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-muted); }
+.mod-review { display: grid; gap: 4px; }
+.mod-review-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 14px; }
+.mod-review .review-body { margin: 6px 0 8px; }
