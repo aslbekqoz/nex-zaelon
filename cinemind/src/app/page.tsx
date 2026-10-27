@@ -7,7 +7,8 @@ import { listGenres, listMovies } from "@/lib/movies/repository";
 import { displayTitle } from "@/lib/movies/types";
 import { getRecommendations } from "@/lib/recommend/service";
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ password?: string }> }) {
+  const passwordReset = (await searchParams).password === "reset";
   const user = await getCurrentUser();
   const [popular, topRated, scifi, drama, animation, genres, forYou] = await Promise.all([
     listMovies({ sort: "popular", limit: 16 }),
@@ -24,6 +25,13 @@ export default async function HomePage() {
 
   return (
     <>
+      {passwordReset ? (
+        <div className="container">
+          <div className="form-ok" role="status" style={{ margin: "16px 0 0" }}>
+            Your password has been changed and you&apos;re signed in. Other devices were signed out.
+          </div>
+        </div>
+      ) : null}
       <section className="hero">
         <Backdrop
           url={featured?.backdropUrl ?? null}

@@ -45,11 +45,22 @@ Optional: set `ANTHROPIC_API_KEY` in `.env` to enable **Write synopsis with AI**
 
 The **Admin** link (`/admin`) opens the admin panel: an overview, user management (admin rights, disabling accounts, signing users out), adding and editing movies by hand (including Uzbek titles and synopses), and the audit log of admin and studio actions.
 
+### Password reset and email
+
+"Forgot your password?" on the sign-in page emails a one-time link that expires in 60 minutes. Using it sets a new password, signs the account out everywhere else and signs it in. To send real emails, set in `.env`:
+
+- `APP_URL` — the site's public address (e.g. `https://cinemind.uz`); required in production because reset links are built from it, never from the request's Host header
+- `SMTP_URL` — e.g. `smtps://user:password@smtp.example.com:465`
+- `MAIL_FROM` — the sender, e.g. `CineMind AI <no-reply@cinemind.uz>`
+
+Without `SMTP_URL`, development prints emails to the server console; production sends nothing and logs an error. Admins can also create a one-time reset link (valid 24 hours) from **Admin → Users** to send by hand.
+
 ### Security notes
 
 - Sign-in is limited to 5 failed attempts per email every 15 minutes.
 - Behind a reverse proxy that sets `X-Forwarded-For` (nginx, Vercel, Cloudflare…), set `TRUST_PROXY_HEADERS=1` to also limit sign-ins and sign-ups per IP. Leave it unset otherwise, since those headers can be forged.
 - Disabled accounts are signed out everywhere and can't sign in.
+- Password reset requests are limited to 3 per email per hour; the reply is the same whether or not an account exists, and only a hash of each reset token is stored.
 
 ## Commands
 
@@ -58,7 +69,7 @@ The **Admin** link (`/admin`) opens the admin panel: an overview, user managemen
 | `npm run dev` | Development server |
 | `npm run build` / `npm start` | Production build and server |
 | `npm run typecheck` | TypeScript check |
-| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, movie form, credits, filters, images) |
+| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, movie form, credits, filters, images) |
 | `npm run db:migrate` | Apply new migrations |
 | `npm run db:seed` | Load genres and starter movies (safe to re-run) |
 
@@ -67,9 +78,10 @@ The **Admin** link (`/admin`) opens the admin panel: an overview, user managemen
 ```
 db/migrations/        SQL migrations
 scripts/              migrate, seed, admin tools
-src/app/              pages (home, search, movie, person, for you, onboarding, sign in/up, watchlist, studio, admin)
+src/app/              pages (home, search, movie, person, for you, onboarding, sign in/up, password reset, watchlist, studio, admin)
 src/components/       UI components
-src/lib/auth/         sessions and authentication
+src/lib/auth/         sessions, authentication, rate limits, password reset
+src/lib/email/        outgoing email (SMTP) and templates
 src/lib/movies/       catalogue, TMDB client, sync, credits, filters, image sizes
 src/lib/people/       person pages and filmographies
 src/lib/watchlist/    personal watchlists

@@ -6,6 +6,8 @@ import { evaluateLimit, evaluateVolume, retryMessage, type Attempt } from "./rat
 const LOGIN_PER_EMAIL = { max: 5, windowMs: 15 * 60_000 };
 const LOGIN_PER_IP = { max: 20, windowMs: 15 * 60_000 };
 const REGISTER_PER_IP = { max: 5, windowMs: 60 * 60_000 };
+const RESET_PER_EMAIL = { max: 3, windowMs: 60 * 60_000 };
+const RESET_PER_IP = { max: 10, windowMs: 60 * 60_000 };
 
 /**
  * Client IP, only when TRUST_PROXY_HEADERS=1 (i.e. behind a proxy that sets X-Forwarded-For).
@@ -19,7 +21,9 @@ export async function clientIp(): Promise<string | null> {
   return forwarded || h.get("x-real-ip")?.trim() || null;
 }
 
-async function recent(column: "email" | "ip", value: string, kind: "login" | "register", windowMs: number) {
+type Kind = "login" | "register" | "reset";
+
+async function recent(column: "email" | "ip", value: string, kind: Kind, windowMs: number) {
   const { rows } = await query<{ success: boolean; at: Date }>(
     `SELECT success, created_at AS at FROM auth_attempts
       WHERE ${column} = $1 AND kind = $2 AND created_at > now() - make_interval(secs => $3)
@@ -47,7 +51,19 @@ export async function registerBlocked(ip: string | null) {
   return r.blocked ? retryMessage(r.retryAfterMs) : null;
 }
 
-export async function recordAttempt(kind: "login" | "register", email: string | null, ip: string | null, success: boolean) {
+/** Limits how often reset emails can be requested, per address and (behind a proxy) per IP. */
+export async function resetBlocked(email: string, ip: string | null) {
+  const now = new Date();
+  const byEmail = evaluateVolume(await recent("email", email, "reset", RESET_PER_EMAIL.windowMs), now, RESET_PER_EMAIL);
+  if (byEmail.blocked) return retryMessage(byEmail.retryAfterMs);
+  if (ip) {
+    const byIp = evaluateVolume(await recent("ip", ip, "reset", RESET_PER_IP.windowMs), now, RESET_PER_IP);
+    if (byIp.blocked) return retryMessage(byIp.retryAfterMs);
+  }
+  return null;
+}
+
+export async function recordAttempt(kind: Kind, email: string | null, ip: string | null, success: boolean) {
   await query("INSERT INTO auth_attempts (kind, email, ip, success) VALUES ($1, $2, $3, $4)", [kind, email, ip, success]);
   // Keep the table small: attempts only matter for a short window
   if (Math.random() < 0.05) await query("DELETE FROM auth_attempts WHERE created_at < now() - interval '1 day'");

@@ -108,8 +108,17 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] Audit log of admin and studio actions (users, movies, drafts, templates, facts, brand, CLI promotions) with filters and paging
 - [x] Forms keep what you typed when the server reports a validation error
 
+### Follow-up: password reset ✅
+- [x] Migration 006: `password_resets` (token hash, expiry, one-time use, created by email or admin); `auth_attempts` gains the `reset` kind
+- [x] "Forgot your password?" → one-time link by email, valid 60 minutes; same reply whether or not the account exists, email sent after the response so timing doesn't reveal it either
+- [x] Reset page: new password + confirmation; signs out every other session, clears sign-in lockout, signs the user in; token kept out of Referer headers and search engines
+- [x] A new request invalidates older links; used, replaced, expired and malformed links are rejected
+- [x] Admins can create a one-time reset link (valid 24 hours) from Admin → Users to send by hand
+- [x] Email over SMTP (`SMTP_URL`, `MAIL_FROM`); links built from `APP_URL`, never from the Host header; development prints emails to the console
+- [x] Rate limits: 3 requests per email per hour, 10 per IP behind a trusted proxy; every step in the audit log
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).
-- There is no password reset or email verification yet (both need an email provider).
+- There is no email address verification yet (the email module from password reset can be reused for it).
 - Roles are `user` and `admin`; every admin can use the Content Studio. A separate `editor` role can be added later without schema changes beyond the role check.

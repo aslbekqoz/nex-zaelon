@@ -16,6 +16,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <h1>Welcome back</h1>
         <p className="muted">Sign in to access your watchlist and recommendations.</p>
         <AuthForm mode="login" action={login} next={next} />
+        <p className="auth-alt" style={{ marginTop: 12 }}>
+          <Link href="/forgot-password">Forgot your password?</Link>
+        </p>
         <p className="auth-alt">
           Don&apos;t have an account? <Link href={`/register?next=${encodeURIComponent(next)}`}>Sign up</Link>
         </p>

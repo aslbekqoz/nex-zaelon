@@ -3,13 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { audit } from "@/lib/audit";
+import { createResetToken } from "@/lib/auth/reset";
 import { requireAdmin } from "@/lib/auth/session";
+import { appUrl } from "@/lib/email/send";
 import { db, query } from "@/lib/db";
 import { importTmdbList } from "@/lib/movies/sync";
 import { TMDB_LISTS, type TmdbListKey } from "@/lib/movies/tmdb";
 import { parseMovieInput } from "./movie-input";
 
-export type FormState = { error?: string; ok?: string };
+export type FormState = { error?: string; ok?: string; link?: string };
 
 function targetId(form: FormData) {
   const n = Number(form.get("id"));
@@ -87,6 +89,23 @@ export async function signOutEverywhere(_prev: FormState, form: FormData): Promi
   revalidatePath("/admin/users");
   if (userId === admin.id) redirect("/login");
   return { ok: `Signed out of ${rowCount} session${rowCount === 1 ? "" : "s"}.` };
+}
+
+/** A one-time reset link the admin sends by hand (for users without working email). */
+export async function createResetLink(_prev: FormState, form: FormData): Promise<FormState> {
+  const admin = await requireAdmin();
+  const userId = targetId(form);
+  const base = appUrl();
+  if (!base) return { error: "Set APP_URL so reset links point to your site." };
+  const { rows } = await query<{ disabled: boolean }>("SELECT disabled_at IS NOT NULL AS disabled FROM users WHERE id = $1", [userId]);
+  if (!rows[0]) return { error: "User not found." };
+  if (rows[0].disabled) return { error: "Enable the account first; disabled accounts can't reset their password." };
+  const { token } = await createResetToken(userId, "admin");
+  await audit(admin.id, "user.reset_link", { type: "user", id: userId });
+  return {
+    ok: "One-time reset link created. It works once, expires in 24 hours, and replaces any earlier link. Send it to the user privately.",
+    link: `${base}/reset-password?token=${token}`,
+  };
 }
 
 // ---------- Movies ----------
