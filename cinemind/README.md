@@ -55,6 +55,8 @@ Users change their email on the **Account** page (click your name in the header)
 
 The Account page also has a **profile picture**: JPEG, PNG, WebP, AVIF or GIF up to 5 MB (after confirming the email). It's cropped to a square, re-encoded and stripped of hidden data such as location, then shown in the header; without one, initials are shown. It also has **Change name** (2–60 characters; extra spaces are tidied and invisible characters rejected) and **Change password** (current password + new one twice). The user stays signed in on that device, every other device is signed out, unused reset links stop working, and a notice is emailed to them.
 
+**Download my data** gives a JSON file with everything stored about the user: account details, favourite genres, watchlist, ratings, profile picture, signed-in sessions and their own account activity. Passwords and sign-in tokens are never included, and Content Studio work isn't part of it.
+
 **Delete account** (at the bottom of the Account page) needs the current password and typing `DELETE`. It permanently removes the account with its watchlist, ratings, preferences, profile picture and sessions, and emails a short confirmation. Content Studio drafts, templates and facts an editor made stay, without their name, and their entries in the activity log show as "Deleted user". The last active admin can't delete their account until someone else is made admin.
 
 "Forgot your password?" on the sign-in page emails a one-time link that expires in 60 minutes. Using it sets a new password, signs the account out everywhere else and signs it in. To send real emails, set in `.env`:
@@ -83,7 +85,7 @@ Without `SMTP_URL`, development prints emails to the server console; production 
 | `npm run dev` | Development server |
 | `npm run build` / `npm start` | Production build and server |
 | `npm run typecheck` | TypeScript check |
-| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, email confirmation and change, profile pictures, account deletion, movie form, credits, filters, images) |
+| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, email confirmation and change, profile pictures, account deletion, data export, movie form, credits, filters, images) |
 | `npm run db:migrate` | Apply new migrations |
 | `npm run db:seed` | Load genres and starter movies (safe to re-run) |
 | `npm run admin:create -- email` | Give a user admin rights (and confirm their email) |
@@ -106,6 +108,7 @@ src/lib/recommend/    recommendation engine and moods
 src/lib/ratings/      user ratings
 src/lib/preferences/  favourite genres and onboarding
 src/lib/studio/       Content Studio: templates, renderer, formatters, drafts, facts
+src/lib/account/      "Download my data" export
 src/lib/admin/        admin panel: users, movie editing, dashboard
 src/lib/audit.ts      audit log
 ```

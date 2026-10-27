@@ -163,6 +163,10 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] Personal details in audit entries about the user are cleared; their past actions show as "Deleted user"; a new `auth.account_deleted` entry (migration 011 adds `audit_log.actor_deleted`)
 - [x] The last active admin can't delete their account; a goodbye email is sent; the address can sign up again as a new, empty account
 
+### Follow-up: downloading your data ✅
+- [x] **Download my data** on the Account page: a JSON file with account details, favourite genres, watchlist, ratings (with movie links), the profile picture (base64), signed-in sessions, a pending email change and the user's own activity-log entries; never passwords or token hashes
+- [x] `POST /account/export` only (SameSite=Lax cookie, so other sites can't trigger it); `Cache-Control: no-store`; each export is audited
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).
