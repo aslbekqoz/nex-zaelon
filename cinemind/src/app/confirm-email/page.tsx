@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ResendVerification } from "@/components/ResendVerification";
 import { logout } from "@/lib/auth/actions";
@@ -39,7 +40,7 @@ export default async function ConfirmEmailPage({ searchParams }: Props) {
           </div>
         )}
         <p className="auth-alt" style={{ marginTop: 24 }}>
-          Wrong address? Sign out and create the account again with the right one.
+          Wrong address? <Link href="/account">Change it</Link>
         </p>
         <form action={logout} style={{ textAlign: "center" }}>
           <button type="submit" className="btn btn-sm btn-ghost">

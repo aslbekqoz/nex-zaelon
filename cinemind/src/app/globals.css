@@ -66,12 +66,17 @@ button, input, select { font: inherit; color: inherit; }
 .header-search { flex: 1; max-width: 420px; margin-left: auto; }
 .header-actions { display: flex; align-items: center; gap: 10px; }
 .user-chip { color: var(--text-muted); font-size: 14px; white-space: nowrap; }
+a.user-chip:hover { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.pending-change { border: 1px solid rgb(245 179 1 / 0.35); background: rgb(245 179 1 / 0.07); border-radius: var(--radius-sm); padding: 12px 14px; margin: 8px 0 4px; }
+.pending-change p { margin: 0 0 10px; }
 
 @media (max-width: 760px) {
   .header-inner { flex-wrap: wrap; height: auto; padding-top: 10px; padding-bottom: 10px; gap: 10px; }
   .nav { order: 3; width: 100%; overflow-x: auto; }
   .header-search { order: 4; max-width: none; width: 100%; flex-basis: 100%; }
-  .user-chip, .header-actions .hide-sm { display: none; }
+  .header-actions .hide-sm { display: none; }
+  /* The name links to the account page, so it stays visible on phones, shortened if needed */
+  .user-chip { max-width: 28vw; overflow: hidden; text-overflow: ellipsis; }
   .header-actions { margin-left: auto; }
 }
 

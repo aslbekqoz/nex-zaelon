@@ -36,7 +36,9 @@ export async function Header() {
         <div className="header-actions">
           {user ? (
             <>
-              <span className="user-chip">{user.name}</span>
+              <Link href="/account" className="user-chip" title="Account">
+                {user.name}
+              </Link>
               <form action={logout}>
                 <button type="submit" className="btn btn-sm">
                   Sign out

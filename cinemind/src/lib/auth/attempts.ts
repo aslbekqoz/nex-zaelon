@@ -9,6 +9,7 @@ const REGISTER_PER_IP = { max: 5, windowMs: 60 * 60_000 };
 const RESET_PER_EMAIL = { max: 3, windowMs: 60 * 60_000 };
 const RESET_PER_IP = { max: 10, windowMs: 60 * 60_000 };
 const VERIFY_PER_EMAIL = { max: 3, windowMs: 60 * 60_000 };
+const EMAIL_CHANGE_PER_ACCOUNT = { max: 3, windowMs: 60 * 60_000 };
 
 /**
  * Client IP, only when TRUST_PROXY_HEADERS=1 (i.e. behind a proxy that sets X-Forwarded-For).
@@ -22,7 +23,7 @@ export async function clientIp(): Promise<string | null> {
   return forwarded || h.get("x-real-ip")?.trim() || null;
 }
 
-type Kind = "login" | "register" | "reset" | "verify";
+type Kind = "login" | "register" | "reset" | "verify" | "email_change";
 
 async function recent(column: "email" | "ip", value: string, kind: Kind, windowMs: number) {
   const { rows } = await query<{ success: boolean; at: Date }>(
@@ -67,6 +68,12 @@ export async function resetBlocked(email: string, ip: string | null) {
 /** Limits "resend confirmation email" per address. */
 export async function verifyResendBlocked(email: string) {
   const r = evaluateVolume(await recent("email", email, "verify", VERIFY_PER_EMAIL.windowMs), new Date(), VERIFY_PER_EMAIL);
+  return r.blocked ? retryMessage(r.retryAfterMs) : null;
+}
+
+/** Limits email change requests per account (keyed by the account's current address). */
+export async function emailChangeBlocked(email: string) {
+  const r = evaluateVolume(await recent("email", email, "email_change", EMAIL_CHANGE_PER_ACCOUNT.windowMs), new Date(), EMAIL_CHANGE_PER_ACCOUNT);
   return r.blocked ? retryMessage(r.retryAfterMs) : null;
 }
 

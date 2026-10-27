@@ -7,7 +7,9 @@ import { audit } from "@/lib/audit";
 import { query } from "@/lib/db";
 import { appUrl, sendEmail } from "@/lib/email/send";
 import { passwordResetEmail } from "@/lib/email/templates";
-import { clientIp, loginBlocked, recordAttempt, registerBlocked, resetBlocked, verifyResendBlocked } from "./attempts";
+import { clientIp, emailChangeBlocked, loginBlocked, recordAttempt, registerBlocked, resetBlocked, verifyResendBlocked } from "./attempts";
+import { cancelEmailChange, startEmailChange } from "./change-email";
+import { newEmailError, normalizeEmail } from "./email-change";
 import { passwordError } from "./password";
 import { completeReset, createResetToken } from "./reset";
 import { sendVerificationEmail } from "./verify";
@@ -152,4 +154,42 @@ export async function resendVerification(_prev: AuthState): Promise<AuthState> {
   if (!sent) return { error: "Email isn't set up on this site yet. Please contact the administrator." };
   await audit(user.id, "auth.verify_resent", { type: "user", id: user.id });
   return { ok: `We've sent a new confirmation link to ${user.email}. It expires in 48 hours.` };
+}
+
+// ---------- Changing the account email ----------
+
+export async function requestEmailChange(_prev: AuthState, form: FormData): Promise<AuthState> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Please sign in first." };
+  const newEmail = normalizeEmail(field(form, "email"));
+  const password = typeof form.get("password") === "string" ? (form.get("password") as string) : "";
+  const invalid = newEmailError(user.email, newEmail);
+  if (invalid) return { error: invalid, email: newEmail };
+
+  // The password check shares the sign-in lockout, so this form can't be used to guess passwords
+  const ip = await clientIp();
+  const locked = await loginBlocked(user.email, ip);
+  if (locked) return { error: locked, email: newEmail };
+  const { rows } = await query<{ password_hash: string }>("SELECT password_hash FROM users WHERE id = $1", [user.id]);
+  const ok = Boolean(rows[0]) && (await bcrypt.compare(password, rows[0].password_hash));
+  await recordAttempt("login", user.email, ip, ok);
+  if (!ok) return { error: "Your current password is incorrect.", email: newEmail };
+
+  const blocked = await emailChangeBlocked(user.email);
+  if (blocked) return { error: blocked, email: newEmail };
+  const taken = await query("SELECT 1 FROM users WHERE email = $1", [newEmail]);
+  if (taken.rowCount) return { error: "That email address is already used by another account.", email: newEmail };
+  if (!appUrl()) return { error: "Email isn't set up on this site yet. Please contact the administrator.", email: newEmail };
+
+  await recordAttempt("email_change", user.email, ip, true);
+  await startEmailChange(user, newEmail);
+  await audit(user.id, "auth.email_change_requested", { type: "user", id: user.id }, { to: newEmail });
+  return { ok: `We've sent a confirmation link to ${newEmail}. Your address changes once you open it (within 24 hours).` };
+}
+
+export async function cancelPendingEmailChange() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login?next=%2Faccount");
+  if (await cancelEmailChange(user.id)) await audit(user.id, "auth.email_change_cancelled", { type: "user", id: user.id });
+  redirect("/account");
 }
