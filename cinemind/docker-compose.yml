@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: cinemind
+      POSTGRES_PASSWORD: cinemind
+      POSTGRES_DB: cinemind
+    ports:
+      - "5432:5432"
+    volumes:
+      - cinemind-db:/var/lib/postgresql/data
+volumes:
+  cinemind-db:
