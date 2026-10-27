@@ -2,6 +2,7 @@
   "name": "cinemind",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "CineMind AI — movie platform, smart recommendations and content studio",
   "engines": {
     "node": ">=22.9"
@@ -18,6 +19,7 @@
     "admin:create": "node --env-file-if-exists=.env scripts/create-admin.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0",
     "bcryptjs": "^3.0.3",
     "next": "^16.4.3",
     "pg": "^8.23.1",

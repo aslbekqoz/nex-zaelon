@@ -5,6 +5,10 @@ import pg from "pg";
 pg.types.setTypeParser(20, (v) => Number.parseInt(v, 10));
 pg.types.setTypeParser(1700, (v) => Number.parseFloat(v));
 pg.types.setTypeParser(1082, (v) => v);
+// BIGINT[] (e.g. studio_drafts.movie_ids) as numbers too
+const INT8_ARRAY = 1016 as Parameters<typeof pg.types.getTypeParser>[0]; // not in the builtins enum
+const parseBigintArray = pg.types.getTypeParser(INT8_ARRAY);
+pg.types.setTypeParser(INT8_ARRAY, (v: string) => (parseBigintArray(v) as string[]).map((n) => Number.parseInt(n, 10)));
 
 const globalForDb = globalThis as unknown as { cinemindPool?: pg.Pool };
 

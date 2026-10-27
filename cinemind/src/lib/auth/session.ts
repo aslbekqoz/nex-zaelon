@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { query } from "@/lib/db";
 
 const COOKIE_NAME = "cm_session";
@@ -64,6 +64,13 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
 export async function requireUser(nextPath = "/"): Promise<User> {
   const user = await getCurrentUser();
   if (!user) redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+  return user;
+}
+
+/** Editors (admins) only; everyone else gets a 404 so the studio isn't advertised. */
+export async function requireEditor(nextPath = "/studio"): Promise<User> {
+  const user = await requireUser(nextPath);
+  if (user.role !== "admin") notFound();
   return user;
 }
 

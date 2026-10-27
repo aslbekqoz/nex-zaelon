@@ -37,7 +37,7 @@ src/lib/
   recommend/         recommendation engine, moods, candidate loading
   ratings/           user ratings
   preferences/       favourite genres, onboarding
-  (later) studio/    Content Studio: templates, drafts, formatters
+  studio/            Content Studio: templates, renderer, formatters, drafts, facts, brand
 ```
 
 ### Extension point for future integrations
@@ -77,13 +77,20 @@ If publishing to a platform (e.g. Telegram) is ever needed, a new `src/lib/integ
 
 Scaling note: the engine scores the 3,000 most popular movies in memory per request, which is fast at the current catalogue size. A much larger catalogue would pre-filter candidates by genre in SQL and cache profiles.
 
-### Stage 4: CineMind Content Studio
-- Tables: `studio_templates`, `studio_drafts`, `studio_facts` (source URL, verification status: unverified / verified / rejected), `brand_settings`
-- Generators: movie card, movie description, weekly movie collection, interesting facts with source references
-- Uzbek-language editorial content
-- Editing, preview, saving drafts, copying formatted text, reusable templates
-- Optional AI-assisted writing (Claude API); the key is only added in this stage. Facts are never shown as verified without a source
-- No automatic publishing to external platforms
+### Stage 4: CineMind Content Studio ✅
+- [x] Migration 003: `brand_settings` (single row), `studio_templates`, `studio_drafts`, `studio_facts` (source URL required, verification status unverified / verified / rejected)
+- [x] Editors only (`users.role = 'admin'`); everyone else gets a 404 at `/studio`
+- [x] Four content types: movie card, movie description, weekly collection, interesting facts — each with default Uzbek and English templates
+- [x] Template engine (`src/lib/studio/render.ts`, pure and unit tested): `{{value}}`, `{{#block}}…{{/block}}` (shown when present, repeated for lists), `{{^block}}`; `**bold**` and `_italic_` markup
+- [x] Uzbek-language editorial content: Uzbek titles, synopses, genre names, runtime ("2 soat 49 daqiqa") and week ranges ("26-oktabr – 1-noyabr"); warnings when Uzbek data is missing
+- [x] Draft editor: edit, live preview, save, status (draft / ready / archived), duplicate, delete, regenerate from any template, unsaved-changes guard
+- [x] Copy as plain text, Markdown, or formatted (HTML with bold, italics and links, plus plain fallback)
+- [x] Weekly collections: pick up to 15 movies, or auto-pick 7 with the recommendation engine, optionally by mood
+- [x] Facts library: add facts with a source link, review (verify / reject / reset with a note); only verified facts in the post's language are used
+- [x] Template manager: create (starting from the default), edit with live sample preview, set default, delete (one per type/language always remains); block-balance validation
+- [x] Brand settings: brand name, signature, hashtags, site URL for movie links, and toggles for rating, runtime, genres, director and trailer
+- [x] Optional "Write synopsis with AI" (Claude API via `@anthropic-ai/sdk`, model `claude-opus-5-5`, server-side refusal fallback enabled) for movie cards and descriptions — only when `ANTHROPIC_API_KEY` is set; uses only the movie's data, replaces only the synopsis, and the editor reviews it before use. Facts are never AI-generated
+- [x] No automatic publishing to any external platform
 
 ### Stage 5: admin panel
 - Admin area (role check on `users.role`)
