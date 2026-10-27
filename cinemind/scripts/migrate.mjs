@@ -15,6 +15,8 @@ const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
 await client.connect();
 
 try {
+  // Several app containers may start at once; only one applies migrations at a time
+  await client.query("SELECT pg_advisory_lock(hashtext('cinemind:migrations'))");
   await client.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
     name TEXT PRIMARY KEY,
     applied_at TIMESTAMPTZ NOT NULL DEFAULT now()

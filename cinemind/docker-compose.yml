@@ -9,5 +9,27 @@ services:
       - "5432:5432"
     volumes:
       - cinemind-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cinemind"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # The production image, started only with: docker compose --profile app up --build
+  app:
+    profiles: ["app"]
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgres://cinemind:cinemind@db:5432/cinemind
+      APP_URL: ${APP_URL:-http://localhost:3000}
+    ports:
+      - "3000:3000"
+
 volumes:
   cinemind-db:

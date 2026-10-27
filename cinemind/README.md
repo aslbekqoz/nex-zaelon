@@ -86,6 +86,23 @@ With `APP_URL` set, the site serves `/robots.txt` and `/sitemap.xml` (every movi
 - Profile pictures are always decoded and re-encoded on the server (never stored as uploaded), limited to 10 uploads per hour, and served from unguessable URLs with `nosniff` and a locked-down Content-Security-Policy.
 - Password reset requests are limited to 3 per email per hour; the reply is the same whether or not an account exists, and only a hash of each reset token is stored.
 
+## Deployment
+
+`Dockerfile` builds a small production image (Next.js standalone output, runs as a non-root user). On start it applies pending migrations, then serves on port 3000:
+
+```bash
+docker build -t cinemind .
+docker run -p 3000:3000 --env-file .env cinemind
+docker exec <container> node scripts/seed.mjs                 # starter catalogue, once
+docker exec <container> node scripts/create-admin.mjs you@example.com
+```
+
+Or run the database and the app together: `docker compose --profile app up --build`. Set `APP_URL` (and `SMTP_URL`, `MAIL_FROM`) for production.
+
+`GET /api/health` answers `200 {"status":"ok"}` when the app can reach PostgreSQL and `503` when it can't. The image's Docker health check uses it, and so can a load balancer or uptime monitor. Migrations take a database lock, so several containers can start at once.
+
+Every push and pull request that touches `cinemind/` runs the **CineMind** GitHub Actions workflow. It typechecks, runs the unit tests, applies migrations and the seed twice on a real PostgreSQL, builds, smoke-tests the production server, and builds the Docker image.
+
 ## Commands
 
 | Command | Purpose |

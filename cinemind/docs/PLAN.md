@@ -184,6 +184,12 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] **Admin → Users**: a role picker per user, an Editors filter, editor count on the dashboard; changes are audited as `user.role_changed` with from/to; the last active admin can't be demoted
 - [x] `npm run user:role -- email user|editor|admin` for the server, with the same last-admin rule
 
+### Follow-up: deployment and CI ✅
+- [x] `Dockerfile`: Next.js standalone build (~430 MB image), non-root, applies migrations on start, Docker health check; `docker compose --profile app up` runs the app next to PostgreSQL
+- [x] `GET /api/health`: 200 when PostgreSQL answers within 2 s, 503 otherwise; no version details
+- [x] Migrations hold an advisory lock, so containers starting together don't race
+- [x] `.github/workflows/cinemind.yml`: typecheck, unit tests, migrate + seed twice on PostgreSQL 16, build, smoke test of public pages and signed-out redirects, Docker build — on pushes and pull requests touching `cinemind/`
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).
