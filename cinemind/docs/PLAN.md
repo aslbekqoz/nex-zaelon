@@ -208,6 +208,10 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] Reviews are part of "Download my data" and are deleted with the account
 - [x] The home page shows the latest reviews (spoiler and hidden ones left out); the admin dashboard counts reviews this week and hidden ones
 
+### Follow-up: accessibility pass ✅
+- [x] axe-core (WCAG 2.1 A/AA + best practices) on 22 public, account, admin and studio pages: 0 violations (was: faint text below 4.5:1 contrast, a primary button whose text inherited a link colour, the logo's accessible name not matching its text, two unnamed search landmarks, audit-log links told apart only by colour)
+- [x] "Skip to content" link as the first stop on every page; focus ring on button-styled file pickers
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).

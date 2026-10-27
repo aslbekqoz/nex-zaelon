@@ -72,6 +72,7 @@ export function HeaderSearch() {
       action="/search"
       className="header-search"
       role="search"
+      aria-label="Site"
       onSubmit={(e) => {
         if (shown && active >= 0) {
           e.preventDefault();
