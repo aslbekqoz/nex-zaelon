@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { tmdbSized } from "@/lib/movies/images";
+import { jsonLdScript, OG_SITE, personJsonLd } from "@/lib/seo";
+import { appUrl } from "@/lib/site";
 import { notFound } from "next/navigation";
 import { MovieGrid } from "@/components/MovieCard";
 import { initials } from "@/components/PersonCard";
@@ -29,7 +32,17 @@ function age(birthday: string, until: string | null) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const id = parseId((await params).id);
   const person = id ? await getPerson(id) : null;
-  return person ? { title: person.name, description: person.biography?.slice(0, 160) } : { title: "Person not found" };
+  if (!person) return { title: "Person not found" };
+  const description = person.biography?.slice(0, 160) || undefined;
+  const image = person.profileUrl ? tmdbSized(person.profileUrl, "h632") : null;
+  const path = `/people/${person.id}`;
+  return {
+    title: person.name,
+    description,
+    alternates: { canonical: path },
+    openGraph: { ...OG_SITE, type: "profile", url: path, title: person.name, description, ...(image ? { images: [{ url: image, alt: person.name }] } : {}) },
+    twitter: { card: "summary", title: person.name, description },
+  };
 }
 
 export default async function PersonPage({ params }: Props) {
@@ -44,8 +57,10 @@ export default async function PersonPage({ params }: Props) {
   const crew = films.filter((f) => f.kinds.includes("crew"));
   const paragraphs = (person.biography ?? "").split(/\n+/).filter(Boolean);
 
+  const base = appUrl();
   return (
     <div className="container">
+      {base ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(personJsonLd(person, base)) }} /> : null}
       <div className="person-layout">
         <div className="person-photo person-photo-lg">
           {person.profileUrl ? (

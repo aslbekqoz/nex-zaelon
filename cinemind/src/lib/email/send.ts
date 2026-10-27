@@ -1,15 +1,7 @@
 import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
 
-/**
- * Public base URL used in links inside emails. It comes from APP_URL, never from the request's
- * Host header (which an attacker controls), so reset links can't point to another site.
- */
-export function appUrl(): string | null {
-  const configured = process.env.APP_URL?.trim().replace(/\/+$/, "");
-  if (configured) return configured;
-  return process.env.NODE_ENV === "production" ? null : "http://localhost:3000";
-}
+export { appUrl } from "@/lib/site";
 
 export function emailConfigured() {
   return Boolean(process.env.SMTP_URL?.trim());
