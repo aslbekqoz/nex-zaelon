@@ -196,6 +196,10 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] **Export CSV** (`/watchlist/export`): UTF-8 with a BOM for Excel, Uzbek titles, genres, watched, ratings, links; cells that a spreadsheet would run as formulas are defused
 - [x] Search-option checks use `Object.hasOwn`, so `?sort=constructor` style values fall back to the default
 
+### Follow-up: search suggestions ✅
+- [x] The header search suggests up to 6 movies (English, Uzbek or original title) and 3 people as you type, from the local catalogue (`GET /api/suggest`, briefly cacheable); prefix matches first, then similarity, then popularity
+- [x] ARIA combobox: arrow keys, Enter, Escape, mouse; "See all results" opens the full search (which also imports from TMDB); without JavaScript it's still a plain search form
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).
