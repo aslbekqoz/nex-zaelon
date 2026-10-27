@@ -1,6 +1,9 @@
 // Human-readable labels for audit actions
 const LABELS: Record<string, string> = {
   "auth.logout": "signed out",
+  "auth.reset_requested": "requested a password reset email",
+  "auth.password_reset": "reset their password",
+  "user.reset_link": "created a password reset link for",
   "user.promote": "made a user admin",
   "user.demote": "removed admin rights",
   "user.disable": "disabled an account",

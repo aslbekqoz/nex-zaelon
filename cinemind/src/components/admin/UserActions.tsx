@@ -3,14 +3,15 @@
 import { useActionState } from "react";
 import { SubmitButton } from "@/components/SubmitButton";
 import { FormMessage } from "@/components/studio/FormMessage";
-import { setUserDisabled, setUserRole, signOutEverywhere } from "@/lib/admin/actions";
+import { createResetLink, setUserDisabled, setUserRole, signOutEverywhere } from "@/lib/admin/actions";
 import type { AdminUser } from "@/lib/admin/repository";
 
 export function UserActions({ user, isSelf }: { user: AdminUser; isSelf: boolean }) {
   const [roleState, roleAction] = useActionState(setUserRole, {});
   const [statusState, statusAction] = useActionState(setUserDisabled, {});
   const [sessionState, sessionAction] = useActionState(signOutEverywhere, {});
-  const message = [roleState, statusState, sessionState].find((s) => s.error || s.ok) ?? {};
+  const [resetState, resetAction] = useActionState(createResetLink, {});
+  const message = [roleState, statusState, sessionState, resetState].find((s) => s.error || s.ok) ?? {};
 
   return (
     <div className="user-actions">
@@ -44,8 +45,24 @@ export function UserActions({ user, isSelf }: { user: AdminUser; isSelf: boolean
             Sign out everywhere
           </SubmitButton>
         </form>
+        {!user.disabledAt ? (
+          <form action={resetAction}>
+            <input type="hidden" name="id" value={user.id} />
+            <SubmitButton className="btn btn-sm btn-ghost" pendingText="…">
+              Create reset link
+            </SubmitButton>
+          </form>
+        ) : null}
       </div>
       <FormMessage state={message} />
+      {resetState.link && message === resetState ? (
+        <div className="tool-row">
+          <input className="input input-sm mono" value={resetState.link} readOnly aria-label="Reset link" onFocus={(e) => e.currentTarget.select()} />
+          <button type="button" className="btn btn-sm" onClick={() => navigator.clipboard?.writeText(resetState.link!)}>
+            Copy
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
