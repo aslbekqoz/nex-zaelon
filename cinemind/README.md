@@ -113,7 +113,7 @@ Or run the database and the app together: `docker compose --profile app up --bui
 
 `GET /api/health` answers `200 {"status":"ok"}` when the app can reach PostgreSQL and `503` when it can't. The image's Docker health check uses it, and so can a load balancer or uptime monitor. Migrations take a database lock, so several containers can start at once.
 
-Every push and pull request that touches `cinemind/` runs the **CineMind** GitHub Actions workflow. It typechecks, runs the unit tests, applies migrations and the seed twice on a real PostgreSQL, builds, smoke-tests the production server, and builds the Docker image.
+Every push and pull request that touches `cinemind/` runs the **CineMind** GitHub Actions workflow. It typechecks, runs the unit tests, applies migrations and the seed twice on a real PostgreSQL, builds, smoke-tests the production server, runs the accessibility audit, and builds the Docker image.
 
 ## Commands
 
@@ -127,6 +127,7 @@ Every push and pull request that touches `cinemind/` runs the **CineMind** GitHu
 | `npm run db:seed` | Load genres and starter movies (safe to re-run) |
 | `npm run admin:create -- email` | Give a user admin rights (and confirm their email) |
 | `npm run user:role -- email role` | Set a user's role: `user`, `editor` or `admin` |
+| `npm run a11y` | Accessibility audit (axe-core, WCAG 2.1 AA) of a running server; set `BASE_URL`, uses a dev database |
 | `npm run user:verify -- email` | Confirm a user's email address |
 
 ## Structure
