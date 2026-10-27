@@ -31,6 +31,10 @@ Without a key the platform runs on the starter catalogue: 30 well-known films wi
 
 Search then imports matching movies from TMDB into the catalogue. The first time a movie page is opened, its poster, rating, runtime, trailer, cast and crew are filled in; opening a person's page adds their best-known films. Admins can also import TMDB's trending, popular, top-rated and now-playing lists from **Admin → Movies**. Uzbek titles and synopses are never overwritten, and movies an admin edited by hand are not refreshed.
 
+### Watchlist
+
+**My watchlist** filters by All, To watch or Watched, sorts by date added, title, year, TMDB rating or your own rating, and shows your rating next to each movie. **Export CSV** downloads the list for Excel or Google Sheets.
+
 ### Admin and Content Studio
 
 Sign up on the site, then give your account admin rights:
@@ -110,7 +114,7 @@ Every push and pull request that touches `cinemind/` runs the **CineMind** GitHu
 | `npm run dev` | Development server |
 | `npm run build` / `npm start` | Production build and server |
 | `npm run typecheck` | TypeScript check |
-| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, email confirmation and change, profile pictures, account deletion, data export, device names, structured data, roles, movie form, credits, filters, images) |
+| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, email confirmation and change, profile pictures, account deletion, data export, device names, structured data, roles, watchlist views and CSV, movie form, credits, filters, images) |
 | `npm run db:migrate` | Apply new migrations |
 | `npm run db:seed` | Load genres and starter movies (safe to re-run) |
 | `npm run admin:create -- email` | Give a user admin rights (and confirm their email) |
