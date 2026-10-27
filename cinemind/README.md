@@ -53,6 +53,8 @@ Ways to confirm an account without email: **Admin → Users → Mark email verif
 
 Users change their email on the **Account** page (click your name in the header): they enter the new address and their current password, and the address changes once they open the link sent to the new one (valid 24 hours). The old address gets a notice when a change is requested and when it's done. Unconfirmed users can use this page to fix a mistyped address.
 
+The Account page also has **Change password** (current password + new one twice). The user stays signed in on that device, every other device is signed out, unused reset links stop working, and a notice is emailed to them.
+
 "Forgot your password?" on the sign-in page emails a one-time link that expires in 60 minutes. Using it sets a new password, signs the account out everywhere else and signs it in. To send real emails, set in `.env`:
 
 - `APP_URL` — the site's public address (e.g. `https://cinemind.uz`); required in production because reset links are built from it, never from the request's Host header
@@ -67,6 +69,7 @@ Without `SMTP_URL`, development prints emails to the server console; production 
 - Behind a reverse proxy that sets `X-Forwarded-For` (nginx, Vercel, Cloudflare…), set `TRUST_PROXY_HEADERS=1` to also limit sign-ins and sign-ups per IP. Leave it unset otherwise, since those headers can be forged.
 - Disabled accounts are signed out everywhere and can't sign in.
 - Confirmation emails can be re-sent 3 times per hour; a link only confirms the address it was sent to.
+- Password changes need the current password (wrong guesses count toward the sign-in lockout).
 - Email changes need the current password (wrong guesses count toward the sign-in lockout), are limited to 3 per hour, and make older reset and confirmation links stop working.
 - Password reset requests are limited to 3 per email per hour; the reply is the same whether or not an account exists, and only a hash of each reset token is stored.
 

@@ -9,3 +9,12 @@ export function passwordError(password: string, confirm?: string) {
   if (confirm !== undefined && confirm !== password) return "The two passwords don't match.";
   return null;
 }
+
+/** Rules for changing a password while signed in (the current one is checked separately). */
+export function passwordChangeError(current: string, next: string, confirm: string) {
+  if (!current) return "Enter your current password.";
+  const error = passwordError(next, confirm);
+  if (error) return error;
+  if (next === current) return "Choose a password that's different from your current one.";
+  return null;
+}
