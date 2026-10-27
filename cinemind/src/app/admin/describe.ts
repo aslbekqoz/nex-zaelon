@@ -6,6 +6,7 @@ const LABELS: Record<string, string> = {
   "auth.email_verified": "confirmed their email",
   "auth.verify_resent": "asked for a new confirmation email",
   "user.email_verified_by_admin": "marked an email as confirmed for",
+  "user.email_verified_cli": "had their email confirmed from the command line",
   "user.reset_link": "created a password reset link for",
   "user.promote": "made a user admin",
   "user.demote": "removed admin rights",

@@ -16,7 +16,8 @@
     "db:migrate": "node --env-file-if-exists=.env scripts/migrate.mjs",
     "db:seed": "node --env-file-if-exists=.env scripts/seed.mjs",
     "db:setup": "npm run db:migrate && npm run db:seed",
-    "admin:create": "node --env-file-if-exists=.env scripts/create-admin.mjs"
+    "admin:create": "node --env-file-if-exists=.env scripts/create-admin.mjs",
+    "user:verify": "node --env-file-if-exists=.env scripts/verify-user.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",

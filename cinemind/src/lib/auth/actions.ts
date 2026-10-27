@@ -11,7 +11,7 @@ import { clientIp, loginBlocked, recordAttempt, registerBlocked, resetBlocked, v
 import { passwordError } from "./password";
 import { completeReset, createResetToken } from "./reset";
 import { sendVerificationEmail } from "./verify";
-import { createSession, destroySession, getCurrentUser, safeNextPath } from "./session";
+import { createSession, destroySession, emailVerificationMode, getCurrentUser, safeNextPath } from "./session";
 
 export type AuthState = { error?: string; ok?: string; email?: string; name?: string };
 
@@ -51,7 +51,9 @@ export async function register(_prev: AuthState, form: FormData): Promise<AuthSt
   await createSession(rows[0].id);
   await sendVerificationEmail({ id: rows[0].id, name, email });
   // New accounts start with taste onboarding unless they were heading somewhere specific
-  redirect(next === "/" ? "/onboarding" : next);
+  const destination = next === "/" ? "/onboarding" : next;
+  // When confirmation is required, they first confirm their email, then continue there
+  redirect(emailVerificationMode() === "required" ? `/confirm-email?next=${encodeURIComponent(destination)}` : destination);
 }
 
 export async function login(_prev: AuthState, form: FormData): Promise<AuthState> {

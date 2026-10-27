@@ -4,6 +4,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { query } from "@/lib/db";
+import { mustConfirmEmail, verificationMode } from "./verification";
 
 const COOKIE_NAME = "cm_session";
 const SESSION_DAYS = 30;
@@ -68,10 +69,28 @@ export async function requireUser(nextPath = "/"): Promise<User> {
   return user;
 }
 
+export function emailVerificationMode() {
+  return verificationMode(process.env.EMAIL_VERIFICATION);
+}
+
+/** True when this user has to confirm their email before using account features. */
+export function needsEmailConfirmation(user: User) {
+  return mustConfirmEmail(user, emailVerificationMode());
+}
+
+/** A signed-in user whose email is confirmed (when confirmation is required); others are sent to confirm it. */
+export async function requireVerifiedUser(nextPath = "/"): Promise<User> {
+  const user = await requireUser(nextPath);
+  if (needsEmailConfirmation(user)) redirect(`/confirm-email?next=${encodeURIComponent(nextPath)}`);
+  return user;
+}
+
 /** Editors only; everyone else gets a 404 so the studio isn't advertised. Today every admin is an editor. */
 export async function requireEditor(nextPath = "/studio"): Promise<User> {
   const user = await requireUser(nextPath);
+  // Role first, so non-editors get a 404 whether or not their email is confirmed
   if (user.role !== "admin") notFound();
+  if (needsEmailConfirmation(user)) redirect(`/confirm-email?next=${encodeURIComponent(nextPath)}`);
   return user;
 }
 
@@ -79,6 +98,7 @@ export async function requireEditor(nextPath = "/studio"): Promise<User> {
 export async function requireAdmin(nextPath = "/admin"): Promise<User> {
   const user = await requireUser(nextPath);
   if (user.role !== "admin") notFound();
+  if (needsEmailConfirmation(user)) redirect(`/confirm-email?next=${encodeURIComponent(nextPath)}`);
   return user;
 }
 

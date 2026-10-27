@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { query } from "@/lib/db";
-import { getCurrentUser, safeNextPath } from "@/lib/auth/session";
+import { getCurrentUser, needsEmailConfirmation, safeNextPath } from "@/lib/auth/session";
 
 function movieIdFrom(form: FormData) {
   const id = Number(form.get("movieId"));
@@ -13,7 +13,9 @@ function movieIdFrom(form: FormData) {
 
 async function userOrLogin(form: FormData) {
   const user = await getCurrentUser();
-  if (!user) redirect(`/login?next=${encodeURIComponent(safeNextPath(form.get("path")))}`);
+  const back = encodeURIComponent(safeNextPath(form.get("path")));
+  if (!user) redirect(`/login?next=${back}`);
+  if (needsEmailConfirmation(user)) redirect(`/confirm-email?next=${back}`);
   return user;
 }
 

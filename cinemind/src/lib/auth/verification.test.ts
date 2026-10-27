@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { verifyEmailMessage } from "../email/templates.ts";
-import { verifyProblem } from "./verification.ts";
+import { mustConfirmEmail, verificationMode, verifyProblem } from "./verification.ts";
 
 describe("verifyProblem", () => {
   const now = new Date("2026-10-27T12:00:00Z");
@@ -23,5 +23,19 @@ describe("verifyEmailMessage", () => {
     assert.match(e.text, /expires in 48 hours/);
     assert.match(e.html, /Hi &lt;b&gt;Bo&lt;\/b&gt;/);
     assert.match(e.text, /\n\nhttps:\/\/cinemind\.example/);
+  });
+});
+
+describe("verification mode", () => {
+  it("is required unless explicitly optional", () => {
+    assert.equal(verificationMode(undefined), "required");
+    assert.equal(verificationMode(""), "required");
+    assert.equal(verificationMode("yes"), "required");
+    assert.equal(verificationMode(" Optional "), "optional");
+  });
+  it("only blocks unconfirmed users in required mode", () => {
+    assert.equal(mustConfirmEmail({ emailVerified: false }, "required"), true);
+    assert.equal(mustConfirmEmail({ emailVerified: true }, "required"), false);
+    assert.equal(mustConfirmEmail({ emailVerified: false }, "optional"), false);
   });
 });

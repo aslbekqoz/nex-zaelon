@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Poster } from "@/components/Poster";
 import { SubmitButton } from "@/components/SubmitButton";
-import { requireUser } from "@/lib/auth/session";
+import { requireVerifiedUser } from "@/lib/auth/session";
 import { displayTitle } from "@/lib/movies/types";
 import { setWatched, toggleWatchlist } from "@/lib/watchlist/actions";
 import { getWatchlist } from "@/lib/watchlist/repository";
@@ -10,7 +10,7 @@ import { getWatchlist } from "@/lib/watchlist/repository";
 export const metadata: Metadata = { title: "My watchlist" };
 
 export default async function WatchlistPage() {
-  const user = await requireUser("/watchlist");
+  const user = await requireVerifiedUser("/watchlist");
   const items = await getWatchlist(user.id);
   const left = items.filter((i) => !i.watched).length;
 

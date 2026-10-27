@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { query } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth/session";
+import { getCurrentUser, needsEmailConfirmation } from "@/lib/auth/session";
 
 export async function rateMovie(form: FormData) {
   const movieId = Number(form.get("movieId"));
@@ -11,6 +11,7 @@ export async function rateMovie(form: FormData) {
   if (!Number.isSafeInteger(movieId) || movieId <= 0) throw new Error("Invalid movie id");
   const user = await getCurrentUser();
   if (!user) redirect(`/login?next=${encodeURIComponent(`/movies/${movieId}`)}`);
+  if (needsEmailConfirmation(user)) redirect(`/confirm-email?next=${encodeURIComponent(`/movies/${movieId}`)}`);
 
   if (rating === 0) {
     await query("DELETE FROM user_ratings WHERE user_id = $1 AND movie_id = $2", [user.id, movieId]);
