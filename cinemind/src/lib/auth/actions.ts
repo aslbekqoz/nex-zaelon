@@ -4,13 +4,13 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { audit } from "@/lib/audit";
-import { query } from "@/lib/db";
+import { db, query } from "@/lib/db";
 import { appUrl, sendEmail } from "@/lib/email/send";
-import { passwordResetEmail } from "@/lib/email/templates";
+import { passwordChangedNotice, passwordResetEmail } from "@/lib/email/templates";
 import { clientIp, emailChangeBlocked, loginBlocked, recordAttempt, registerBlocked, resetBlocked, verifyResendBlocked } from "./attempts";
 import { cancelEmailChange, startEmailChange } from "./change-email";
 import { newEmailError, normalizeEmail } from "./email-change";
-import { passwordError } from "./password";
+import { passwordChangeError, passwordError } from "./password";
 import { completeReset, createResetToken } from "./reset";
 import { sendVerificationEmail } from "./verify";
 import { createSession, destroySession, emailVerificationMode, getCurrentUser, safeNextPath } from "./session";
@@ -192,4 +192,50 @@ export async function cancelPendingEmailChange() {
   if (!user) redirect("/login?next=%2Faccount");
   if (await cancelEmailChange(user.id)) await audit(user.id, "auth.email_change_cancelled", { type: "user", id: user.id });
   redirect("/account");
+}
+
+// ---------- Changing the password while signed in ----------
+
+export async function changePassword(_prev: AuthState, form: FormData): Promise<AuthState> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Please sign in first." };
+  const str = (k: string) => (typeof form.get(k) === "string" ? (form.get(k) as string) : "");
+  const current = str("current");
+  const next = str("password");
+  const invalid = passwordChangeError(current, next, str("confirm"));
+  if (invalid) return { error: invalid };
+
+  // Wrong current passwords share the sign-in lockout, so this form can't be used to guess
+  const ip = await clientIp();
+  const locked = await loginBlocked(user.email, ip);
+  if (locked) return { error: locked };
+  const { rows } = await query<{ password_hash: string }>("SELECT password_hash FROM users WHERE id = $1", [user.id]);
+  const ok = Boolean(rows[0]) && (await bcrypt.compare(current, rows[0].password_hash));
+  await recordAttempt("login", user.email, ip, ok);
+  if (!ok) return { error: "Your current password is incorrect." };
+
+  const hash = await bcrypt.hash(next, 12);
+  const client = await db().connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("UPDATE users SET password_hash = $2 WHERE id = $1", [user.id, hash]);
+    // Sign out every session (this one is replaced below) and retire unused reset links
+    await client.query("DELETE FROM sessions WHERE user_id = $1", [user.id]);
+    await client.query("UPDATE password_resets SET used_at = now() WHERE user_id = $1 AND used_at IS NULL", [user.id]);
+    await client.query("COMMIT");
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+  await createSession(user.id);
+  await audit(user.id, "auth.password_changed", { type: "user", id: user.id });
+
+  const base = appUrl();
+  if (base) {
+    const notice = passwordChangedNotice({ name: user.name, resetUrl: `${base}/forgot-password` });
+    after(() => sendEmail({ to: user.email, ...notice }));
+  }
+  return { ok: "Your password has been changed. Other devices were signed out." };
 }

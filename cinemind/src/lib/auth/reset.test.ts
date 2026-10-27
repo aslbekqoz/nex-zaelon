@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { passwordResetEmail } from "../email/templates.ts";
-import { passwordError } from "./password.ts";
+import { passwordChangedNotice, passwordResetEmail } from "../email/templates.ts";
+import { passwordChangeError, passwordError } from "./password.ts";
 import { looksLikeToken, resetProblem } from "./reset-token.ts";
 
 describe("passwordError", () => {
@@ -48,5 +48,24 @@ describe("passwordResetEmail", () => {
   });
   it("describes long windows in hours", () => {
     assert.match(passwordResetEmail({ name: "A", link: "https://x", minutes: 1440 }).text, /expires in 24 hours/);
+  });
+});
+
+describe("passwordChangeError", () => {
+  it("needs the current password, valid matching new ones, and a real change", () => {
+    assert.equal(passwordChangeError("", "new-password", "new-password"), "Enter your current password.");
+    assert.match(passwordChangeError("old-password", "short", "short")!, /at least 8/);
+    assert.match(passwordChangeError("old-password", "new-password", "new-passwrd")!, /don't match/);
+    assert.match(passwordChangeError("same-password", "same-password", "same-password")!, /different/);
+    assert.equal(passwordChangeError("old-password", "new-password", "new-password"), null);
+  });
+});
+
+describe("passwordChangedNotice", () => {
+  it("links to password reset and escapes the name", () => {
+    const n = passwordChangedNotice({ name: "<Ada>", resetUrl: "https://x/forgot-password" });
+    assert.equal(n.subject, "Your CineMind AI password was changed");
+    assert.match(n.text, /https:\/\/x\/forgot-password/);
+    assert.match(n.html, /Hi &lt;Ada&gt;/);
   });
 });

@@ -142,9 +142,14 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] Security notices to the old address when a change is requested and when it completes (new address masked, with a password reset link)
 - [x] Unconfirmed users can open the Account page to fix a mistyped address ("Wrong address? Change it" on **Check your inbox**)
 
+### Follow-up: changing the password ✅
+- [x] **Change password** on the Account page: current password, new password twice; same rules as sign-up and must differ from the current one
+- [x] Wrong current passwords share the sign-in lockout
+- [x] On success: every session is signed out and this device gets a fresh session; unused reset links stop working; a "your password was changed" email with a reset link; audit entry
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).
 - An address taken by someone else's unconfirmed account can be reclaimed by its owner through "Forgot password".
-- Users can't change their name or password from the Account page yet (password changes go through "Forgot password").
+- Users can't change their display name from the Account page yet.
 - Roles are `user` and `admin`; every admin can use the Content Studio. A separate `editor` role can be added later without schema changes beyond the role check.

@@ -3,6 +3,7 @@ const LABELS: Record<string, string> = {
   "auth.logout": "signed out",
   "auth.reset_requested": "requested a password reset email",
   "auth.password_reset": "reset their password",
+  "auth.password_changed": "changed their password",
   "auth.email_verified": "confirmed their email",
   "auth.verify_resent": "asked for a new confirmation email",
   "auth.email_change_requested": "asked to change their email",

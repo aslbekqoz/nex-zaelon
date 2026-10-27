@@ -108,3 +108,18 @@ export function emailChangeNotice(input: { name: string; maskedNewEmail: string;
   ]);
   return { subject, text, html };
 }
+
+/** Sent after a signed-in password change, so the owner notices a change they didn't make. */
+export function passwordChangedNotice(input: { name: string; resetUrl: string; brand?: string }) {
+  const brand = input.brand ?? "CineMind AI";
+  const subject = `Your ${brand} password was changed`;
+  const lead = `The password for your ${brand} account was just changed, and other devices were signed out.`;
+  const text = [`Hi ${input.name},`, "", lead, "", `If this wasn't you, reset your password straight away: ${input.resetUrl}`, "", `— ${brand}`].join("\n");
+  const html = wrap([
+    `<p>Hi ${escapeHtml(input.name)},</p>`,
+    `<p>${escapeHtml(lead)}</p>`,
+    `<p>If this wasn't you, <a href="${escapeHtml(input.resetUrl)}">reset your password</a> straight away.</p>`,
+    `<p>— ${escapeHtml(brand)}</p>`,
+  ]);
+  return { subject, text, html };
+}

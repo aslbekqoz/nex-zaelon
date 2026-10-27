@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChangeEmailForm } from "@/components/ChangeEmailForm";
+import { ChangePasswordForm } from "@/components/ChangePasswordForm";
 import { cancelPendingEmailChange } from "@/lib/auth/actions";
 import { getPendingChange } from "@/lib/auth/change-email";
 import { requireUser } from "@/lib/auth/session";
@@ -68,9 +69,14 @@ export default async function AccountPage() {
         <ChangeEmailForm />
       </section>
 
-      <p className="faint" style={{ fontSize: 14 }}>
-        Forgot your password? <Link href="/forgot-password" className="link">Reset it</Link>.
-      </p>
+      <section className="card-panel">
+        <h2>Change password</h2>
+        <p className="muted" style={{ margin: "4px 0 0" }}>
+          You&apos;ll stay signed in here; other devices will be signed out. Forgot your current password?{" "}
+          <Link href="/forgot-password" className="link">Reset it</Link>.
+        </p>
+        <ChangePasswordForm />
+      </section>
     </div>
   );
 }
