@@ -13,7 +13,7 @@ export default async function UsersPage({ searchParams }: Props) {
   const sp = await searchParams;
   const q = sp.q?.trim().slice(0, 100) || undefined;
   const role = sp.role === "admin" || sp.role === "user" ? sp.role : undefined;
-  const status = sp.status === "active" || sp.status === "disabled" ? sp.status : undefined;
+  const status = sp.status === "active" || sp.status === "disabled" || sp.status === "unverified" ? sp.status : undefined;
   // "#123" finds a user by id (used by links from the audit log)
   const byId = q?.match(/^#(\d+)$/)?.[1];
   const users = (await listUsers({ q: byId ? undefined : q, role, status })).filter((u) => !byId || u.id === Number(byId));
@@ -34,6 +34,7 @@ export default async function UsersPage({ searchParams }: Props) {
           <option value="">Any status</option>
           <option value="active">Active</option>
           <option value="disabled">Disabled</option>
+          <option value="unverified">Email unverified</option>
         </select>
         <button className="btn">Filter</button>
       </form>
@@ -57,6 +58,7 @@ export default async function UsersPage({ searchParams }: Props) {
             <div className="draft-meta">
               {u.role === "admin" ? <span className="badge status-ready">Admin</span> : <span className="badge">User</span>}
               {u.disabledAt ? <span className="badge status-rejected">Disabled</span> : null}
+              {!u.emailVerifiedAt ? <span className="badge status-unverified">Email unverified</span> : null}
             </div>
             <UserActions user={u} isSelf={u.id === me.id} />
           </li>

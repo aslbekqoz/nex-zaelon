@@ -16,6 +16,7 @@ export default async function AdminHome() {
   const attention: { text: string; href: string }[] = [];
   if (s.facts_pending) attention.push({ text: `${s.facts_pending} fact${s.facts_pending === 1 ? "" : "s"} waiting for review`, href: "/studio/facts?status=unverified" });
   if (s.failed_logins_24h >= 10) attention.push({ text: `${s.failed_logins_24h} failed sign-ins in the last 24 hours`, href: "/admin/audit" });
+  if (s.unverified) attention.push({ text: `${s.unverified} account${s.unverified === 1 ? " hasn't" : "s haven't"} confirmed their email`, href: "/admin/users?status=unverified" });
   if (s.disabled) attention.push({ text: `${s.disabled} disabled account${s.disabled === 1 ? "" : "s"}`, href: "/admin/users?status=disabled" });
 
   return (

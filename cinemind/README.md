@@ -45,7 +45,9 @@ Optional: set `ANTHROPIC_API_KEY` in `.env` to enable **Write synopsis with AI**
 
 The **Admin** link (`/admin`) opens the admin panel: an overview, user management (admin rights, disabling accounts, signing users out), adding and editing movies by hand (including Uzbek titles and synopses), and the audit log of admin and studio actions.
 
-### Password reset and email
+### Email: confirmation and password reset
+
+New accounts get an email with a link to confirm their address (valid 48 hours). Until they confirm, a banner reminds them and offers **Resend email**; the link works on any device without signing in. Confirmation is a reminder, not a gate — unconfirmed users can still use the site. Completing a password reset also confirms the address, and admins can mark an address as confirmed in **Admin → Users**.
 
 "Forgot your password?" on the sign-in page emails a one-time link that expires in 60 minutes. Using it sets a new password, signs the account out everywhere else and signs it in. To send real emails, set in `.env`:
 
@@ -60,6 +62,7 @@ Without `SMTP_URL`, development prints emails to the server console; production 
 - Sign-in is limited to 5 failed attempts per email every 15 minutes.
 - Behind a reverse proxy that sets `X-Forwarded-For` (nginx, Vercel, Cloudflare…), set `TRUST_PROXY_HEADERS=1` to also limit sign-ins and sign-ups per IP. Leave it unset otherwise, since those headers can be forged.
 - Disabled accounts are signed out everywhere and can't sign in.
+- Confirmation emails can be re-sent 3 times per hour; a link only confirms the address it was sent to.
 - Password reset requests are limited to 3 per email per hour; the reply is the same whether or not an account exists, and only a hash of each reset token is stored.
 
 ## Commands
@@ -69,7 +72,7 @@ Without `SMTP_URL`, development prints emails to the server console; production 
 | `npm run dev` | Development server |
 | `npm run build` / `npm start` | Production build and server |
 | `npm run typecheck` | TypeScript check |
-| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, movie form, credits, filters, images) |
+| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, email confirmation, movie form, credits, filters, images) |
 | `npm run db:migrate` | Apply new migrations |
 | `npm run db:seed` | Load genres and starter movies (safe to re-run) |
 
@@ -78,9 +81,9 @@ Without `SMTP_URL`, development prints emails to the server console; production 
 ```
 db/migrations/        SQL migrations
 scripts/              migrate, seed, admin tools
-src/app/              pages (home, search, movie, person, for you, onboarding, sign in/up, password reset, watchlist, studio, admin)
+src/app/              pages (home, search, movie, person, for you, onboarding, sign in/up, password reset, email confirmation, watchlist, studio, admin)
 src/components/       UI components
-src/lib/auth/         sessions, authentication, rate limits, password reset
+src/lib/auth/         sessions, authentication, rate limits, password reset, email confirmation
 src/lib/email/        outgoing email (SMTP) and templates
 src/lib/movies/       catalogue, TMDB client, sync, credits, filters, image sizes
 src/lib/people/       person pages and filmographies

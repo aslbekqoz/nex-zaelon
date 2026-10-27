@@ -74,7 +74,11 @@ export async function completeReset(token: string, password: string) {
       await client.query("ROLLBACK");
       return { ok: false as const, error: problem ?? "This reset link is invalid." };
     }
-    await client.query("UPDATE users SET password_hash = $2 WHERE id = $1", [row.user_id, hash]);
+    // Opening the reset link proves the user reads this inbox, so the address counts as confirmed
+    await client.query(
+      "UPDATE users SET password_hash = $2, email_verified_at = COALESCE(email_verified_at, now()) WHERE id = $1",
+      [row.user_id, hash],
+    );
     await client.query("UPDATE password_resets SET used_at = now() WHERE user_id = $1 AND used_at IS NULL", [row.user_id]);
     await client.query("DELETE FROM sessions WHERE user_id = $1", [row.user_id]);
     await client.query("COMMIT");
