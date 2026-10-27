@@ -7,14 +7,24 @@ function day(d: Date) {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
-export function ReviewCard({ review, own = false }: { review: Review; own?: boolean }) {
+export function ReviewCard({ review, own = false, linkAuthor = true }: { review: Review; own?: boolean; linkAuthor?: boolean }) {
   const edited = review.updatedAt.getTime() - review.createdAt.getTime() > 60_000;
   return (
     <article className={`review${review.hidden ? " is-hidden" : ""}`}>
       <header className="review-head">
         <UserAvatar name={review.authorName} avatarKey={review.avatarKey} size={36} />
         <div className="review-meta">
-          <strong>{own ? "Your review" : review.authorName}</strong>
+          <strong>
+            {own ? (
+              "Your review"
+            ) : linkAuthor ? (
+              <Link href={`/users/${review.userId}`} className="review-author">
+                {review.authorName}
+              </Link>
+            ) : (
+              review.authorName
+            )}
+          </strong>
           <span className="faint">
             {day(review.createdAt)}
             {edited ? " · edited" : ""}

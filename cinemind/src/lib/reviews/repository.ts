@@ -56,6 +56,40 @@ export async function listLatestReviews(limit = 6) {
   return rows;
 }
 
+export type ReviewerProfile = { id: number; name: string; avatarKey: string | null; joinedAt: Date; reviews: number };
+
+/**
+ * A reviewer's public profile. Only active accounts with at least one public review have one,
+ * so profile URLs can't be used to list members.
+ */
+export async function getReviewerProfile(userId: number) {
+  const { rows } = await query<ReviewerProfile>(
+    `SELECT u.id::int AS id, u.name, a.key AS "avatarKey", u.created_at AS "joinedAt", count(r.*)::int AS reviews
+       FROM users u
+       JOIN movie_reviews r ON r.user_id = u.id AND r.hidden_at IS NULL
+       LEFT JOIN user_avatars a ON a.user_id = u.id
+      WHERE u.id = $1 AND u.disabled_at IS NULL
+      GROUP BY u.id, a.key`,
+    [userId],
+  );
+  return rows[0] ?? null;
+}
+
+export type ProfileReview = Review & { movieTitle: string; movieYear: number | null; posterUrl: string | null };
+
+/** A reviewer's public reviews, newest first. */
+export async function listUserReviews(userId: number, limit = 50) {
+  const { rows } = await query<ProfileReview>(
+    `SELECT x.*, m.title AS "movieTitle", EXTRACT(YEAR FROM m.release_date)::int AS "movieYear", m.poster_url AS "posterUrl"
+       FROM (${REVIEW_SELECT} WHERE r.user_id = $1 AND r.hidden_at IS NULL AND u.disabled_at IS NULL
+              ORDER BY r.created_at DESC LIMIT $2) x
+       JOIN movies m ON m.id = x."movieId"
+      ORDER BY x."createdAt" DESC`,
+    [userId, limit],
+  );
+  return rows;
+}
+
 /** The user's own review of a movie, hidden or not. */
 export async function getOwnReview(userId: number, movieId: number) {
   const { rows } = await query<Review>(`${REVIEW_SELECT} WHERE r.user_id = $1 AND r.movie_id = $2`, [userId, movieId]);

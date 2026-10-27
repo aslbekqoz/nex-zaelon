@@ -207,6 +207,7 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] **Admin → Reviews**: newest or hidden reviews; hiding keeps a review visible to its author with a note; all audited
 - [x] Reviews are part of "Download my data" and are deleted with the account
 - [x] The home page shows the latest reviews (spoiler and hidden ones left out); the admin dashboard counts reviews this week and hidden ones
+- [x] Reviewer profiles (`/users/<id>`): name, picture, review count, average rating and public reviews; only for active accounts with a public review (so members can't be listed), never the email, `noindex`
 
 ### Follow-up: accessibility pass ✅
 - [x] axe-core (WCAG 2.1 A/AA + best practices) on 22 public, account, admin and studio pages: 0 violations (was: faint text below 4.5:1 contrast, a primary button whose text inherited a link colour, the logo's accessible name not matching its text, two unnamed search landmarks, audit-log links told apart only by colour)
