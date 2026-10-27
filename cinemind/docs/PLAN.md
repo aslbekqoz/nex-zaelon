@@ -147,9 +147,12 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] Wrong current passwords share the sign-in lockout
 - [x] On success: every session is signed out and this device gets a fresh session; unused reset links stop working; a "your password was changed" email with a reset link; audit entry
 
+### Follow-up: changing the display name ✅
+- [x] **Change name** on the Account page; shared rules with sign-up: 2–60 characters, whitespace tidied, invisible/control characters (incl. bidi overrides) rejected
+- [x] The header updates immediately; the change is recorded in the audit log with the old and new name
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).
 - An address taken by someone else's unconfirmed account can be reclaimed by its owner through "Forgot password".
-- Users can't change their display name from the Account page yet.
 - Roles are `user` and `admin`; every admin can use the Content Studio. A separate `editor` role can be added later without schema changes beyond the role check.

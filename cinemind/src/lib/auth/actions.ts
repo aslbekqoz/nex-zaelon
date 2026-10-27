@@ -1,6 +1,7 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { audit } from "@/lib/audit";
@@ -10,6 +11,7 @@ import { passwordChangedNotice, passwordResetEmail } from "@/lib/email/templates
 import { clientIp, emailChangeBlocked, loginBlocked, recordAttempt, registerBlocked, resetBlocked, verifyResendBlocked } from "./attempts";
 import { cancelEmailChange, startEmailChange } from "./change-email";
 import { newEmailError, normalizeEmail } from "./email-change";
+import { nameError, normalizeName } from "./name";
 import { passwordChangeError, passwordError } from "./password";
 import { completeReset, createResetToken } from "./reset";
 import { sendVerificationEmail } from "./verify";
@@ -27,12 +29,13 @@ function field(form: FormData, key: string) {
 }
 
 export async function register(_prev: AuthState, form: FormData): Promise<AuthState> {
-  const name = field(form, "name");
+  const name = normalizeName(field(form, "name"));
   const email = field(form, "email").toLowerCase();
   const password = typeof form.get("password") === "string" ? (form.get("password") as string) : "";
   const next = safeNextPath(form.get("next"));
 
-  if (name.length < 2 || name.length > 60) return { error: "Name must be 2–60 characters.", email, name };
+  const badName = nameError(name);
+  if (badName) return { error: badName, email, name };
   if (!EMAIL_RE.test(email) || email.length > 254) return { error: "Please enter a valid email address.", email, name };
   const pwError = passwordError(password);
   if (pwError) return { error: pwError, email, name };
@@ -238,4 +241,20 @@ export async function changePassword(_prev: AuthState, form: FormData): Promise<
     after(() => sendEmail({ to: user.email, ...notice }));
   }
   return { ok: "Your password has been changed. Other devices were signed out." };
+}
+
+// ---------- Changing the display name ----------
+
+export async function changeName(_prev: AuthState, form: FormData): Promise<AuthState> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Please sign in first." };
+  const name = normalizeName(field(form, "name"));
+  const invalid = nameError(name);
+  if (invalid) return { error: invalid, name };
+  if (name === user.name) return { error: "That's already your name.", name };
+  await query("UPDATE users SET name = $2 WHERE id = $1", [user.id, name]);
+  await audit(user.id, "auth.name_changed", { type: "user", id: user.id }, { from: user.name, to: name });
+  // The name appears in the header on every page
+  revalidatePath("/", "layout");
+  return { ok: "Your name has been updated.", name };
 }
