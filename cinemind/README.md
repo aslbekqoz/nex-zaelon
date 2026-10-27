@@ -33,7 +33,7 @@ Search then imports matching movies from TMDB into the catalogue. The first time
 
 ### Reviews
 
-Movie pages have a **Reviews** section. Users with a confirmed email can write one review per movie (20–4000 characters), mark it as containing spoilers, and edit or delete it later; their rating of the movie appears on it. The home page shows the latest reviews (never spoiler ones). A reviewer's name opens their profile with all their public reviews (no email shown, not indexed by search engines). Admins moderate under **Admin → Reviews**: a hidden review disappears for everyone except its author, who sees a note.
+Movie pages have a **Reviews** section. Users with a confirmed email can write one review per movie (20–4000 characters), mark it as containing spoilers, and edit or delete it later; their rating of the movie appears on it. Other users can mark a review as **Helpful**; reviews are listed most helpful first, or newest first. The home page shows the latest reviews (never spoiler ones). A reviewer's name opens their profile with all their public reviews (no email shown, not indexed by search engines). Admins moderate under **Admin → Reviews**: a hidden review disappears for everyone except its author, who sees a note.
 
 ### Search suggestions
 

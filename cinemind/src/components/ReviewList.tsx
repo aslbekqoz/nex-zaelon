@@ -1,13 +1,28 @@
 import Link from "next/link";
 import type { LatestReview, Review } from "@/lib/reviews/repository";
+import { voteHelpful } from "@/lib/reviews/actions";
 import { reviewExcerpt } from "@/lib/reviews/rules";
+import { SubmitButton } from "./SubmitButton";
 import { UserAvatar } from "./UserAvatar";
 
 function day(d: Date) {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
-export function ReviewCard({ review, own = false, linkAuthor = true }: { review: Review; own?: boolean; linkAuthor?: boolean }) {
+type VoteProps = { canVote: boolean; voted: boolean };
+
+export function ReviewCard({
+  review,
+  own = false,
+  linkAuthor = true,
+  vote,
+}: {
+  review: Review;
+  own?: boolean;
+  linkAuthor?: boolean;
+  /** Shows the "helpful" count, and the vote button when the viewer may vote. */
+  vote?: VoteProps;
+}) {
   const edited = review.updatedAt.getTime() - review.createdAt.getTime() > 60_000;
   return (
     <article className={`review${review.hidden ? " is-hidden" : ""}`}>
@@ -43,6 +58,31 @@ export function ReviewCard({ review, own = false, linkAuthor = true }: { review:
       ) : (
         <p className="review-body">{review.body}</p>
       )}
+      {vote ? (
+        <footer className="review-foot">
+          {vote.canVote ? (
+            <form action={voteHelpful}>
+              <input type="hidden" name="authorId" value={review.userId} />
+              <input type="hidden" name="movieId" value={review.movieId} />
+              <input type="hidden" name="helpful" value={vote.voted ? "0" : "1"} />
+              <SubmitButton className={`btn btn-sm${vote.voted ? " is-on" : " btn-ghost"}`} pendingText="…">
+                <span aria-hidden="true">👍</span> {vote.voted ? "You found this helpful" : "Helpful"}
+              </SubmitButton>
+            </form>
+          ) : null}
+          {review.helpful ? (
+            <span className="faint">
+              {review.helpful} {review.helpful === 1 ? "person" : "people"} found this helpful
+            </span>
+          ) : null}
+        </footer>
+      ) : own && review.helpful ? (
+        <footer className="review-foot">
+          <span className="faint">
+            {review.helpful} {review.helpful === 1 ? "person" : "people"} found this helpful
+          </span>
+        </footer>
+      ) : null}
     </article>
   );
 }

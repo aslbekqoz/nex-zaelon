@@ -21,7 +21,7 @@ import { getOwnReview, listMovieReviews } from "@/lib/reviews/repository";
 import { jsonLdScript, movieJsonLd, OG_SITE, shareImage } from "@/lib/seo";
 import { appUrl } from "@/lib/site";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ reviews?: string }> };
 
 const JOB_LABELS: Record<string, string> = {
   "Original Music Composer": "Music",
@@ -76,7 +76,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function MoviePage({ params }: Props) {
+export default async function MoviePage({ params, searchParams }: Props) {
   const id = parseId((await params).id);
   if (!id) notFound();
 
@@ -88,11 +88,13 @@ export default async function MoviePage({ params }: Props) {
     getMovieCredits(id),
   ]);
   if (!movie) notFound();
+  const reviewSort = (await searchParams).reviews === "newest" ? "newest" : "helpful";
+  const canVote = Boolean(user && !needsEmailConfirmation(user));
   const [[status, userRating, ownReview], reviews] = await Promise.all([
     user
       ? Promise.all([getWatchlistStatus(user.id, movie.id), getUserRating(user.id, movie.id), getOwnReview(user.id, movie.id)])
       : Promise.resolve([{ saved: false, watched: false }, null, null] as const),
-    listMovieReviews(movie.id),
+    listMovieReviews(movie.id, { sort: reviewSort, viewerId: user?.id }),
   ]);
   const otherReviews = reviews.reviews.filter((r) => r.userId !== user?.id);
 
@@ -283,10 +285,20 @@ export default async function MoviePage({ params }: Props) {
               to write a review.
             </p>
           )}
+          {otherReviews.length > 1 ? (
+            <nav className="review-sort" aria-label="Sort reviews">
+              <Link href={`${path}#reviews`} className={reviewSort === "helpful" ? "active" : ""} aria-current={reviewSort === "helpful" ? "true" : undefined} scroll={false}>
+                Most helpful
+              </Link>
+              <Link href={`${path}?reviews=newest#reviews`} className={reviewSort === "newest" ? "active" : ""} aria-current={reviewSort === "newest" ? "true" : undefined} scroll={false}>
+                Newest
+              </Link>
+            </nav>
+          ) : null}
           {otherReviews.length ? (
             <div className="review-list">
               {otherReviews.map((r) => (
-                <ReviewCard key={r.userId} review={r} />
+                <ReviewCard key={r.userId} review={r} vote={{ canVote, voted: reviews.votedFor.has(r.userId) }} />
               ))}
             </div>
           ) : !ownReview ? (
