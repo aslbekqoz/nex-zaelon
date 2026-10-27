@@ -151,6 +151,12 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] **Change name** on the Account page; shared rules with sign-up: 2–60 characters, whitespace tidied, invisible/control characters (incl. bidi overrides) rejected
 - [x] The header updates immediately; the change is recorded in the audit log with the old and new name
 
+### Follow-up: profile picture ✅
+- [x] **Choose picture** on the Account page (JPEG, PNG, WebP, AVIF or GIF up to 5 MB) with a preview before saving; **Remove picture**; needs a confirmed email
+- [x] Every upload is decoded and re-encoded with `sharp` to a 256×256 WebP (centre crop, EXIF orientation applied, all metadata such as GPS dropped); SVG and decompression bombs are rejected
+- [x] Stored in PostgreSQL (`user_avatars`, migration 010), served from `/avatars/<random key>` with a new key on every upload, so URLs can be cached forever and can't be guessed
+- [x] Shown in the header, on the Account page and in Admin → Users; initials when there is none; 10 uploads per hour; audit entries
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).

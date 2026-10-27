@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/session";
 import { logout } from "@/lib/auth/actions";
+import { UserAvatar } from "./UserAvatar";
 
 export async function Header() {
   const user = await getCurrentUser();
@@ -37,7 +38,8 @@ export async function Header() {
           {user ? (
             <>
               <Link href="/account" className="user-chip" title="Account">
-                {user.name}
+                <UserAvatar name={user.name} avatarKey={user.avatarKey} size={28} />
+                <span className="user-chip-name">{user.name}</span>
               </Link>
               <form action={logout}>
                 <button type="submit" className="btn btn-sm">
