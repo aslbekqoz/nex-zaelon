@@ -19,7 +19,7 @@ import { nameError, normalizeName } from "./name";
 import { passwordChangeError, passwordError } from "./password";
 import { completeReset, createResetToken } from "./reset";
 import { sendVerificationEmail } from "./verify";
-import { createSession, destroySession, emailVerificationMode, getCurrentUser, needsEmailConfirmation, safeNextPath } from "./session";
+import { createSession, destroySession, emailVerificationMode, getCurrentUser, needsEmailConfirmation, revokeSessions, safeNextPath } from "./session";
 
 export type AuthState = { error?: string; ok?: string; email?: string; name?: string };
 
@@ -261,6 +261,25 @@ export async function changeName(_prev: AuthState, form: FormData): Promise<Auth
   // The name appears in the header on every page
   revalidatePath("/", "layout");
   return { ok: "Your name has been updated.", name };
+}
+
+// ---------- Signed-in devices ----------
+
+export async function signOutDevice(form: FormData) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login?next=/account");
+  const id = Number(form.get("id"));
+  if (!Number.isSafeInteger(id) || id <= 0) return;
+  if (await revokeSessions(user.id, { id })) await audit(user.id, "auth.session_revoked", { type: "user", id: user.id });
+  revalidatePath("/account");
+}
+
+export async function signOutOtherDevices() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login?next=/account");
+  const ended = await revokeSessions(user.id, "others");
+  if (ended) await audit(user.id, "auth.other_sessions_revoked", { type: "user", id: user.id }, { sessions: ended });
+  revalidatePath("/account");
 }
 
 // ---------- Deleting the account ----------

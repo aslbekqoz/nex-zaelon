@@ -1,13 +1,16 @@
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { cache } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { query } from "@/lib/db";
+import { MAX_USER_AGENT } from "./device";
 import { mustConfirmEmail, verificationMode } from "./verification";
 
 const COOKIE_NAME = "cm_session";
 const SESSION_DAYS = 30;
+// "Last active" is refreshed at most this often, so page views don't each write to the database
+const TOUCH_INTERVAL_MS = 5 * 60 * 1000;
 
 export type User = {
   id: number;
@@ -27,10 +30,12 @@ function hashToken(token: string) {
 export async function createSession(userId: number) {
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-  await query("INSERT INTO sessions (token_hash, user_id, expires_at) VALUES ($1, $2, $3)", [
+  const userAgent = (await headers()).get("user-agent")?.slice(0, MAX_USER_AGENT) || null;
+  await query("INSERT INTO sessions (token_hash, user_id, expires_at, user_agent) VALUES ($1, $2, $3, $4)", [
     hashToken(token),
     userId,
     expiresAt,
+    userAgent,
   ]);
   (await cookies()).set(COOKIE_NAME, token, {
     httpOnly: true,
@@ -56,15 +61,55 @@ export async function destroySession() {
 export const getCurrentUser = cache(async (): Promise<User | null> => {
   const token = (await cookies()).get(COOKIE_NAME)?.value;
   if (!token) return null;
-  const { rows } = await query<User>(
-    `SELECT u.id, u.email, u.name, u.role, u.email_verified_at IS NOT NULL AS "emailVerified", a.key AS "avatarKey"
+  const tokenHash = hashToken(token);
+  const { rows } = await query<User & { lastSeenAt: Date }>(
+    `SELECT u.id, u.email, u.name, u.role, u.email_verified_at IS NOT NULL AS "emailVerified", a.key AS "avatarKey",
+            s.last_seen_at AS "lastSeenAt"
        FROM sessions s JOIN users u ON u.id = s.user_id
        LEFT JOIN user_avatars a ON a.user_id = u.id
       WHERE s.token_hash = $1 AND s.expires_at > now() AND u.disabled_at IS NULL`,
-    [hashToken(token)],
+    [tokenHash],
   );
-  return rows[0] ?? null;
+  if (!rows[0]) return null;
+  const { lastSeenAt, ...user } = rows[0];
+  if (Date.now() - lastSeenAt.getTime() > TOUCH_INTERVAL_MS) {
+    await query("UPDATE sessions SET last_seen_at = now() WHERE token_hash = $1", [tokenHash]);
+  }
+  return user;
 });
+
+export type DeviceSession = {
+  id: number;
+  userAgent: string | null;
+  createdAt: Date;
+  lastSeenAt: Date;
+  /** The session this request is using. */
+  current: boolean;
+};
+
+/** The user's active sessions, most recently used first. */
+export async function listSessions(userId: number): Promise<DeviceSession[]> {
+  const token = (await cookies()).get(COOKIE_NAME)?.value ?? "";
+  const { rows } = await query<DeviceSession>(
+    `SELECT id::int AS id, user_agent AS "userAgent", created_at AS "createdAt", last_seen_at AS "lastSeenAt",
+            token_hash = $2 AS current
+       FROM sessions WHERE user_id = $1 AND expires_at > now()
+      ORDER BY (token_hash = $2) DESC, last_seen_at DESC`,
+    [userId, token ? hashToken(token) : ""],
+  );
+  return rows;
+}
+
+/** Signs out one of the user's other sessions; the current one is left alone. Returns how many ended. */
+export async function revokeSessions(userId: number, which: { id: number } | "others"): Promise<number> {
+  const token = (await cookies()).get(COOKIE_NAME)?.value ?? "";
+  const current = token ? hashToken(token) : "";
+  const { rowCount } =
+    which === "others"
+      ? await query("DELETE FROM sessions WHERE user_id = $1 AND token_hash <> $2", [userId, current])
+      : await query("DELETE FROM sessions WHERE user_id = $1 AND id = $2 AND token_hash <> $3", [userId, which.id, current]);
+  return rowCount ?? 0;
+}
 
 export async function requireUser(nextPath = "/"): Promise<User> {
   const user = await getCurrentUser();

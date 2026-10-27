@@ -40,7 +40,7 @@ export async function loadExportSource(userId: number): Promise<ExportSource | n
       [userId],
     ),
     query<ExportSource["sessions"][number]>(
-      `SELECT created_at AS "createdAt", expires_at AS "expiresAt" FROM sessions
+      `SELECT user_agent AS "userAgent", created_at AS "createdAt", last_seen_at AS "lastSeenAt", expires_at AS "expiresAt" FROM sessions
         WHERE user_id = $1 AND expires_at > now() ORDER BY created_at DESC`,
       [userId],
     ),

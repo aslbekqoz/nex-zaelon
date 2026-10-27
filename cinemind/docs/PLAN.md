@@ -167,6 +167,11 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] **Download my data** on the Account page: a JSON file with account details, favourite genres, watchlist, ratings (with movie links), the profile picture (base64), signed-in sessions, a pending email change and the user's own activity-log entries; never passwords or token hashes
 - [x] `POST /account/export` only (SameSite=Lax cookie, so other sites can't trigger it); `Cache-Control: no-store`; each export is audited
 
+### Follow-up: signed-in devices ✅
+- [x] **Signed-in devices** on the Account page: each session shows its browser and system (from the User-Agent), when it signed in and when it was last active; this device is marked
+- [x] **Sign out** a single device or **Sign out all other devices**; both audited
+- [x] Migration 012 gives sessions a public `id` (the token hash never leaves the server), `user_agent` and `last_seen_at` (refreshed at most every 5 minutes); Admin → Users "last seen" uses it; the data export lists devices
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).

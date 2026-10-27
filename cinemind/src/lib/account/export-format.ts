@@ -1,5 +1,7 @@
 // Shapes a user's data into the downloadable export. Pure, unit tested.
 
+import { describeDevice } from "../auth/device.ts";
+
 export type ExportSource = {
   user: {
     name: string;
@@ -13,7 +15,7 @@ export type ExportSource = {
   watchlist: { movieId: number; title: string; titleUz: string | null; year: number | null; watched: boolean; addedAt: Date }[];
   ratings: { movieId: number; title: string; titleUz: string | null; year: number | null; rating: number; ratedAt: Date }[];
   pendingEmailChange: { newEmail: string; createdAt: Date; expiresAt: Date } | null;
-  sessions: { createdAt: Date; expiresAt: Date }[];
+  sessions: { userAgent: string | null; createdAt: Date; lastSeenAt: Date; expiresAt: Date }[];
   avatar: { contentType: string; updatedAt: Date; image: Uint8Array } | null;
   activity: { action: string; createdAt: Date; details: Record<string, unknown> }[];
 };
@@ -65,7 +67,13 @@ export function buildAccountExport(src: ExportSource, opts: { base: string | nul
           dataBase64: Buffer.from(src.avatar.image).toString("base64"),
         }
       : null,
-    signedInSessions: src.sessions.map((s) => ({ signedInAt: s.createdAt.toISOString(), expiresAt: s.expiresAt.toISOString() })),
+    signedInSessions: src.sessions.map((s) => ({
+      device: describeDevice(s.userAgent),
+      userAgent: s.userAgent,
+      signedInAt: s.createdAt.toISOString(),
+      lastActiveAt: s.lastSeenAt.toISOString(),
+      expiresAt: s.expiresAt.toISOString(),
+    })),
     activity: src.activity.map((a) => ({ action: a.action, at: a.createdAt.toISOString(), ...(Object.keys(a.details).length ? { details: a.details } : {}) })),
   };
 }

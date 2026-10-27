@@ -442,3 +442,12 @@ a.stat-card:hover { border-color: var(--accent); }
 
 /* ---------- Account deletion ---------- */
 .danger-zone { border-color: rgb(255 107 107 / 0.35); }
+
+/* ---------- Signed-in devices ---------- */
+.device-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.device-list li {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px;
+}
+.device-info { min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.device-meta { flex-basis: 100%; font-size: 13px; }
