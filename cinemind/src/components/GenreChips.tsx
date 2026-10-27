@@ -1,10 +1,10 @@
 import Link from "next/link";
 import type { Genre } from "@/lib/movies/types";
 
-export function GenreChips({ genres, active, q }: { genres: Genre[]; active?: string; q?: string }) {
+/** `keep` holds other search params (query, sort, filters) to carry over when switching genre. */
+export function GenreChips({ genres, active, keep = {} }: { genres: Genre[]; active?: string; keep?: Record<string, string> }) {
   const href = (slug?: string) => {
-    const p = new URLSearchParams();
-    if (q) p.set("q", q);
+    const p = new URLSearchParams(keep);
     if (slug) p.set("genre", slug);
     const s = p.toString();
     return s ? `/search?${s}` : "/search";

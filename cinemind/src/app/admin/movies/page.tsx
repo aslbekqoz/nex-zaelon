@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { TmdbImport } from "@/components/admin/TmdbImport";
 import { query } from "@/lib/db";
 import { searchMovies } from "@/lib/movies/repository";
+import { TMDB_LISTS, tmdbEnabled } from "@/lib/movies/tmdb";
 
 export const metadata: Metadata = { title: "Movies" };
 
@@ -28,6 +30,13 @@ export default async function AdminMoviesPage({ searchParams }: Props) {
           + Add movie
         </Link>
       </div>
+      {tmdbEnabled() ? (
+        <TmdbImport lists={Object.entries(TMDB_LISTS).map(([key, l]) => ({ key, label: l.label }))} />
+      ) : (
+        <p className="notice" style={{ margin: "12px 0" }}>
+          Set <code>TMDB_API_KEY</code> to import trending and popular movies from TMDB.
+        </p>
+      )}
       <form className="search-form" action="/admin/movies" style={{ gridTemplateColumns: "1fr auto" }}>
         <label className="sr-only" htmlFor="q">
           Search movies

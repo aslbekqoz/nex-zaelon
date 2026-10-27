@@ -34,6 +34,7 @@ src/lib/
   auth/              sessions, sign in / sign up
   movies/            catalogue repository, TMDB client, sync
   watchlist/         personal watchlists
+  people/            person pages and filmographies
   recommend/         recommendation engine, moods, candidate loading
   ratings/           user ratings
   preferences/       favourite genres, onboarding
@@ -61,12 +62,14 @@ If publishing to a platform (e.g. Telegram) is ever needed, a new `src/lib/integ
 - [x] Responsive dark UI (phone, tablet, desktop)
 - [x] English interface
 
-### Stage 2: deeper discovery
-- Filters for year range, language and rating
-- Cast and crew (TMDB credits), person pages
-- Admin import of TMDB trending and popular movies
-- Admin editing of Uzbek titles and synopses
-- Image optimisation (`next/image`, TMDB sizes)
+### Stage 2: deeper discovery ✅
+- [x] Migration 005: `people`, `movie_credits` (cast with character and billing order; key crew by job), indexes for the new filters
+- [x] Search filters: year range, original language (with counts) and minimum rating, combined with text search, genre and sorting; links and pagination keep every filter
+- [x] Cast and crew from TMDB credits: up to 15 billed cast and key crew (director, writers, composer, cinematographer, editor, up to 3 producers); cast row and linked crew on movie pages
+- [x] Person pages (`/people/[id]`): photo, known for, birth/death with age, biography, and filmography split into acting and behind the camera; their 24 best-known released films are added to the catalogue from TMDB
+- [x] Admin import of TMDB lists (trending, popular, top rated, now in cinemas; up to 100 movies), audited
+- [x] Admin editing of Uzbek titles and synopses (done in stage 5)
+- [x] Images: right TMDB size per place with responsive `srcset` (cards ~w342, detail poster w500/w780, backdrops w780/w1280, profiles w185), lazy loading, and a clean fallback instead of a broken image when a picture fails (also before hydration)
 
 ### Stage 3: recommendation system ✅
 - [x] Onboarding after sign-up: pick favourite genres and liked movies (liked picks are saved as 8/10 and the UI says so); editable later

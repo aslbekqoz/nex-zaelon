@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Backdrop } from "@/components/Backdrop";
 import { GenreChips } from "@/components/GenreChips";
 import { MovieRow } from "@/components/MovieCard";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -24,13 +25,9 @@ export default async function HomePage() {
   return (
     <>
       <section className="hero">
-        <div
-          className="hero-bg"
-          style={
-            featured?.backdropUrl
-              ? { backgroundImage: `url(${featured.backdropUrl})` }
-              : { background: "radial-gradient(1200px 500px at 70% 10%, #3a2a05, transparent), radial-gradient(900px 500px at 10% 90%, #2b0f2e, transparent), #0b0c10" }
-          }
+        <Backdrop
+          url={featured?.backdropUrl ?? null}
+          fallbackStyle={{ background: "radial-gradient(1200px 500px at 70% 10%, #3a2a05, transparent), radial-gradient(900px 500px at 10% 90%, #2b0f2e, transparent), #0b0c10" }}
         />
         <div className="container">
           <div className="hero-content">

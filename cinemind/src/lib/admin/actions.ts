@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { audit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/auth/session";
 import { db, query } from "@/lib/db";
+import { importTmdbList } from "@/lib/movies/sync";
+import { TMDB_LISTS, type TmdbListKey } from "@/lib/movies/tmdb";
 import { parseMovieInput } from "./movie-input";
 
 export type FormState = { error?: string; ok?: string };
@@ -154,4 +156,24 @@ export async function deleteMovie(form: FormData) {
   if (rows[0]) await audit(admin.id, "movie.delete", { type: "movie", id: movieId }, { title: rows[0].title });
   revalidatePath("/admin/movies");
   redirect("/admin/movies");
+}
+
+// ---------- TMDB import ----------
+
+export async function importFromTmdb(_prev: FormState, form: FormData): Promise<FormState> {
+  const admin = await requireAdmin();
+  const list = form.get("list");
+  const pages = Number(form.get("pages"));
+  if (typeof list !== "string" || !(list in TMDB_LISTS)) return { error: "Choose a list." };
+  if (!Number.isInteger(pages) || pages < 1 || pages > 5) return { error: "Pages must be 1–5." };
+  try {
+    const { fetched, added } = await importTmdbList(list as TmdbListKey, pages);
+    await audit(admin.id, "movie.import", { type: "tmdb_list", id: list }, { pages, fetched, added });
+    revalidatePath("/admin/movies");
+    revalidatePath("/");
+    return { ok: `Imported “${TMDB_LISTS[list as TmdbListKey].label}”: ${fetched} movies fetched, ${added} new.` };
+  } catch (err) {
+    console.error("[admin] TMDB import failed:", err);
+    return { error: `Import failed: ${(err as Error).message}` };
+  }
 }

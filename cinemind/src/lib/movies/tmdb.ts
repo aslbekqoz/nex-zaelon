@@ -1,4 +1,5 @@
 import "server-only";
+import type { RawCast, RawCrew } from "./credits";
 
 // Thin client for TMDB (themoviedb.org). Without a key the platform runs on the local catalogue only.
 
@@ -26,7 +27,7 @@ export type TmdbMovieDetails = Omit<TmdbMovieSummary, "genre_ids"> & {
   runtime: number | null;
   genres: { id: number; name: string }[];
   videos?: { results: { key: string; site: string; type: string; official: boolean; iso_639_1: string }[] };
-  credits?: { crew: { job: string; name: string }[] };
+  credits?: { cast?: RawCast[]; crew?: RawCrew[] };
 };
 
 export function tmdbEnabled() {
@@ -56,6 +57,43 @@ export async function tmdbSearch(q: string) {
 
 export async function tmdbDetails(id: number) {
   return tmdb<TmdbMovieDetails>(`/movie/${id}`, { append_to_response: "videos,credits" });
+}
+
+export type TmdbPersonCredit = TmdbMovieSummary & { character?: string; job?: string; order?: number; department?: string };
+
+export type TmdbPerson = {
+  id: number;
+  name: string;
+  biography: string;
+  birthday: string | null;
+  deathday: string | null;
+  place_of_birth: string | null;
+  profile_path: string | null;
+  known_for_department: string;
+  popularity: number;
+  adult?: boolean;
+  movie_credits?: { cast: TmdbPersonCredit[]; crew: TmdbPersonCredit[] };
+};
+
+export async function tmdbPerson(id: number) {
+  return tmdb<TmdbPerson>(`/person/${id}`, { append_to_response: "movie_credits" });
+}
+
+export const TMDB_LISTS = {
+  trending: { path: "/trending/movie/week", label: "Trending this week" },
+  popular: { path: "/movie/popular", label: "Popular" },
+  top_rated: { path: "/movie/top_rated", label: "Top rated" },
+  now_playing: { path: "/movie/now_playing", label: "Now in cinemas" },
+} as const;
+export type TmdbListKey = keyof typeof TMDB_LISTS;
+
+export async function tmdbList(list: TmdbListKey, page: number) {
+  const data = await tmdb<{ results: TmdbMovieSummary[] }>(TMDB_LISTS[list].path, { page: String(page) });
+  return data.results.filter((m) => !m.adult);
+}
+
+export function profileUrl(path: string | null) {
+  return path ? `${IMAGE}/w185${path}` : null;
 }
 
 export function posterUrl(path: string | null) {

@@ -1,6 +1,6 @@
 import "server-only";
 import { query } from "@/lib/db";
-import type { Genre, Movie, SearchParams, SortKey } from "./types";
+import type { Credit, Genre, Movie, SearchParams, SortKey } from "./types";
 
 export const PAGE_SIZE = 24;
 
@@ -89,8 +89,20 @@ export async function searchMovies(params: SearchParams) {
            OR similarity(m.title, $1) > 0.3 OR similarity(COALESCE(m.title_uz, ''), $1) > 0.3)
       AND ($3::text IS NULL OR EXISTS (
             SELECT 1 FROM movie_genres mg JOIN genres g ON g.id = mg.genre_id
-             WHERE mg.movie_id = m.id AND g.slug = $3))`;
-  const args = [q, like, params.genre || null];
+             WHERE mg.movie_id = m.id AND g.slug = $3))
+      AND ($4::int IS NULL OR m.release_date >= make_date($4, 1, 1))
+      AND ($5::int IS NULL OR m.release_date < make_date($5 + 1, 1, 1))
+      AND ($6::text IS NULL OR m.original_language = $6)
+      AND ($7::numeric IS NULL OR m.rating >= $7)`;
+  const args = [
+    q,
+    like,
+    params.genre || null,
+    params.yearFrom ?? null,
+    params.yearTo ?? null,
+    params.language ?? null,
+    params.minRating ?? null,
+  ];
 
   // With a search term, the closest match comes first
   const order = q && sort === "popular"
@@ -98,7 +110,7 @@ export async function searchMovies(params: SearchParams) {
     : ORDER_BY[sort];
 
   const [list, count] = await Promise.all([
-    query<MovieRow>(`${MOVIE_SELECT} ${where} ORDER BY ${order} LIMIT ${PAGE_SIZE} OFFSET $4`, [
+    query<MovieRow>(`${MOVIE_SELECT} ${where} ORDER BY ${order} LIMIT ${PAGE_SIZE} OFFSET $8`, [
       ...args,
       (page - 1) * PAGE_SIZE,
     ]),
@@ -167,4 +179,28 @@ export async function listMoviesByIds(ids: number[]) {
   const { rows } = await query<MovieRow>(`${MOVIE_SELECT} WHERE m.id = ANY($1::bigint[])`, [ids]);
   const byId = new Map(rows.map((r) => [r.id, toMovie(r)]));
   return ids.map((id) => byId.get(id)).filter((m): m is Movie => Boolean(m));
+}
+
+/** Original languages present in the catalogue, most common first. */
+export async function listLanguages() {
+  const { rows } = await query<{ code: string; n: number }>(
+    `SELECT original_language AS code, count(*)::int AS n FROM movies
+      WHERE original_language IS NOT NULL GROUP BY original_language ORDER BY n DESC, code LIMIT 40`,
+  );
+  return rows;
+}
+
+/** Stored cast (billing order) and key crew for a movie. */
+export async function getMovieCredits(movieId: number) {
+  const { rows } = await query<Credit & { kind: "cast" | "crew" }>(
+    `SELECT p.id AS "personId", p.name, p.profile_url AS "profileUrl", c.role, c.kind
+       FROM movie_credits c JOIN people p ON p.id = c.person_id
+      WHERE c.movie_id = $1
+      ORDER BY c.kind, c.ord, p.name`,
+    [movieId],
+  );
+  return {
+    cast: rows.filter((r) => r.kind === "cast"),
+    crew: rows.filter((r) => r.kind === "crew"),
+  };
 }

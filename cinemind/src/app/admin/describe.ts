@@ -10,6 +10,7 @@ const LABELS: Record<string, string> = {
   "movie.create": "added a movie",
   "movie.update": "edited a movie",
   "movie.delete": "deleted a movie",
+  "movie.import": "imported movies from TMDB",
   "draft.create": "created a draft",
   "draft.ai_write": "used AI on a draft",
   "draft.delete": "deleted a draft",

@@ -1,13 +1,18 @@
 import "server-only";
 import { db, query } from "@/lib/db";
 import { getMovieSyncInfo } from "./repository";
+import { KEY_JOBS, pickCredits, type CreditPick } from "./credits";
 import {
   backdropUrl,
   pickTrailer,
   posterUrl,
+  profileUrl,
   tmdbDetails,
   tmdbEnabled,
+  tmdbList,
+  tmdbPerson,
   tmdbSearch,
+  type TmdbListKey,
   type TmdbMovieSummary,
 } from "./tmdb";
 
@@ -25,12 +30,14 @@ function sameRelease(localDate: string | null, remoteDate?: string | null) {
   return a === null || b === null || Math.abs(a - b) <= 1;
 }
 
+/** Inserts or refreshes movies from TMDB summaries; returns how many were new. */
 async function upsertSummaries(items: TmdbMovieSummary[]) {
+  let added = 0;
   const client = await db().connect();
   try {
     await client.query("BEGIN");
     for (const m of items) {
-      const { rows } = await client.query<{ id: number }>(
+      const { rows } = await client.query<{ id: number; inserted: boolean }>(
         `INSERT INTO movies (tmdb_id, title, original_title, overview, release_date, rating, vote_count,
                              popularity, original_language, poster_url, backdrop_url, source)
          VALUES ($1, $2, $3, NULLIF($4, ''), NULLIF($5, '')::date, $6, $7, $8, $9, $10, $11, 'tmdb')
@@ -48,7 +55,7 @@ async function upsertSummaries(items: TmdbMovieSummary[]) {
          WHERE NOT movies.sync_locked
            AND (movies.release_date IS NULL OR EXCLUDED.release_date IS NULL
             OR abs(extract(year FROM movies.release_date) - extract(year FROM EXCLUDED.release_date)) <= 1)
-         RETURNING id`,
+         RETURNING id, (xmax = 0) AS inserted`,
         [
           m.id,
           m.title,
@@ -63,6 +70,7 @@ async function upsertSummaries(items: TmdbMovieSummary[]) {
           backdropUrl(m.backdrop_path),
         ],
       );
+      if (rows[0]?.inserted) added++;
       if (rows[0] && m.genre_ids?.length) {
         await client.query(
           `INSERT INTO movie_genres (movie_id, genre_id)
@@ -71,6 +79,52 @@ async function upsertSummaries(items: TmdbMovieSummary[]) {
           [rows[0].id, m.genre_ids],
         );
       }
+    }
+    await client.query("COMMIT");
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+  return { added };
+}
+
+/** Upserts people by TMDB id and returns tmdb id → local person id. */
+async function upsertPeople(client: import("pg").PoolClient, picks: { tmdbPersonId: number; name: string; profilePath: string | null; knownFor: string | null; popularity: number }[]) {
+  const ids = new Map<number, number>();
+  for (const p of picks) {
+    if (ids.has(p.tmdbPersonId)) continue;
+    const { rows } = await client.query<{ id: number }>(
+      `INSERT INTO people (tmdb_id, name, profile_url, known_for_department, popularity)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (tmdb_id) DO UPDATE SET
+         name = EXCLUDED.name,
+         profile_url = COALESCE(EXCLUDED.profile_url, people.profile_url),
+         known_for_department = COALESCE(EXCLUDED.known_for_department, people.known_for_department),
+         popularity = GREATEST(people.popularity, EXCLUDED.popularity)
+       RETURNING id`,
+      [p.tmdbPersonId, p.name, profileUrl(p.profilePath), p.knownFor, p.popularity],
+    );
+    ids.set(p.tmdbPersonId, rows[0].id);
+  }
+  return ids;
+}
+
+/** Replaces a movie's stored cast and crew with the chosen credits. */
+async function saveCredits(movieId: number, picks: CreditPick[]) {
+  if (!picks.length) return;
+  const client = await db().connect();
+  try {
+    await client.query("BEGIN");
+    const ids = await upsertPeople(client, picks);
+    await client.query("DELETE FROM movie_credits WHERE movie_id = $1", [movieId]);
+    for (const p of picks) {
+      await client.query(
+        `INSERT INTO movie_credits (movie_id, person_id, kind, role, department, ord)
+         VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING`,
+        [movieId, ids.get(p.tmdbPersonId), p.kind, p.role, p.department, p.ord],
+      );
     }
     await client.query("COMMIT");
   } catch (err) {
@@ -155,7 +209,65 @@ export async function ensureDetails(movieId: number) {
         [movieId, d.genres.map((g) => g.id)],
       );
     }
+    await saveCredits(movieId, pickCredits(d.credits));
   } catch (err) {
     console.error(`[tmdb] #${movieId} details:`, (err as Error).message);
+  }
+}
+
+/** Imports one of TMDB's movie lists (trending, popular…) into the catalogue. */
+export async function importTmdbList(list: TmdbListKey, pages: number) {
+  if (!tmdbEnabled()) throw new Error("TMDB is not configured (TMDB_API_KEY).");
+  const items: TmdbMovieSummary[] = [];
+  for (let page = 1; page <= pages; page++) items.push(...(await tmdbList(list, page)));
+  const unique = [...new Map(items.map((m) => [m.id, m])).values()];
+  const { added } = await upsertSummaries(unique);
+  return { fetched: unique.length, added };
+}
+
+const PERSON_FILMS = 24;
+
+/** Fills a person's biography and adds their best-known films to the catalogue (every 30 days). */
+export async function ensurePerson(personId: number) {
+  if (!tmdbEnabled()) return;
+  const { rows } = await query<{ tmdb_id: number | null; synced: boolean }>(
+    `SELECT tmdb_id, (details_synced_at IS NOT NULL AND details_synced_at > now() - interval '30 days') AS synced
+       FROM people WHERE id = $1`,
+    [personId],
+  );
+  const info = rows[0];
+  if (!info?.tmdb_id || info.synced) return;
+  try {
+    const p = await tmdbPerson(info.tmdb_id);
+    await query(
+      `UPDATE people SET name = $2, biography = NULLIF($3, ''), birthday = $4::date, deathday = $5::date,
+              place_of_birth = $6, profile_url = COALESCE($7, profile_url), known_for_department = $8,
+              popularity = $9, details_synced_at = now()
+        WHERE id = $1`,
+      [personId, p.name, p.biography, p.birthday || null, p.deathday || null, p.place_of_birth, profileUrl(p.profile_path),
+       p.known_for_department, p.popularity],
+    );
+    // Their most popular films (acting or a key crew job) join the catalogue
+    const credits = [
+      ...(p.movie_credits?.cast ?? []).map((c) => ({ ...c, kind: "cast" as const, role: (c.character ?? "").trim() })),
+      ...(p.movie_credits?.crew ?? []).filter((c) => KEY_JOBS.includes(c.job ?? "")).map((c) => ({ ...c, kind: "crew" as const, role: c.job ?? "" })),
+    ].filter((c) => !c.adult && c.release_date);
+    const top = [...new Map([...credits].sort((a, b) => b.popularity - a.popularity).map((c) => [c.id, c])).values()].slice(0, PERSON_FILMS);
+    if (!top.length) return;
+    await upsertSummaries(top);
+    const ids = await query<{ id: number; tmdb_id: number }>("SELECT id, tmdb_id FROM movies WHERE tmdb_id = ANY($1::int[])", [top.map((m) => m.id)]);
+    const movieIdByTmdb = new Map(ids.rows.map((r) => [r.tmdb_id, r.id]));
+    for (const c of credits) {
+      const movieId = movieIdByTmdb.get(c.id);
+      if (!movieId) continue;
+      // Movie-level credits (with billing order) win; these only fill gaps
+      await query(
+        `INSERT INTO movie_credits (movie_id, person_id, kind, role, department, ord)
+         VALUES ($1, $2, $3, $4, $5, 900) ON CONFLICT DO NOTHING`,
+        [movieId, personId, c.kind, c.role, c.kind === "cast" ? "Acting" : (c.department ?? null)],
+      );
+    }
+  } catch (err) {
+    console.error(`[tmdb] person #${personId}:`, (err as Error).message);
   }
 }

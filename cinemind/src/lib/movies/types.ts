@@ -33,6 +33,17 @@ export type SearchParams = {
   genre?: string;
   sort?: SortKey;
   page?: number;
+  yearFrom?: number;
+  yearTo?: number;
+  language?: string;
+  minRating?: number;
+};
+
+export type Credit = {
+  personId: number;
+  name: string;
+  profileUrl: string | null;
+  role: string;
 };
 
 export function displayTitle(m: Pick<Movie, "title">) {

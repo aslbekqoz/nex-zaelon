@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MovieRow } from "@/components/MovieCard";
+import { Backdrop } from "@/components/Backdrop";
+import { PersonCard } from "@/components/PersonCard";
 import { Poster } from "@/components/Poster";
 import { RatingWidget } from "@/components/RatingWidget";
 import { SubmitButton } from "@/components/SubmitButton";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getMovie, getSimilarMovies } from "@/lib/movies/repository";
+import { getMovie, getMovieCredits, getSimilarMovies } from "@/lib/movies/repository";
+import type { Credit } from "@/lib/movies/types";
 import { ensureDetails } from "@/lib/movies/sync";
 import { getUserRating } from "@/lib/ratings/repository";
 import { displayTitle } from "@/lib/movies/types";
@@ -14,6 +17,24 @@ import { setWatched, toggleWatchlist } from "@/lib/watchlist/actions";
 import { getWatchlistStatus } from "@/lib/watchlist/repository";
 
 type Props = { params: Promise<{ id: string }> };
+
+const JOB_LABELS: Record<string, string> = {
+  "Original Music Composer": "Music",
+  "Director of Photography": "Cinematography",
+  Novel: "Based on the novel by",
+  Story: "Story",
+};
+
+/** Crew grouped by job, in the order chosen at sync time (Director first). */
+function groupCrew(crew: Credit[]) {
+  const groups = new Map<string, Credit[]>();
+  for (const c of crew) {
+    const list = groups.get(c.role) ?? [];
+    if (!list.some((p) => p.personId === c.personId)) list.push(c);
+    groups.set(c.role, list);
+  }
+  return [...groups.entries()];
+}
 
 function parseId(raw: string) {
   const id = Number(raw);
@@ -41,13 +62,19 @@ export default async function MoviePage({ params }: Props) {
   if (!id) notFound();
 
   await ensureDetails(id);
-  const [movie, similar, user] = await Promise.all([getMovie(id), getSimilarMovies(id), getCurrentUser()]);
+  const [movie, similar, user, credits] = await Promise.all([
+    getMovie(id),
+    getSimilarMovies(id),
+    getCurrentUser(),
+    getMovieCredits(id),
+  ]);
   if (!movie) notFound();
   const [status, userRating] = user
     ? await Promise.all([getWatchlistStatus(user.id, movie.id), getUserRating(user.id, movie.id)])
     : [{ saved: false, watched: false }, null];
 
   const title = displayTitle(movie);
+  const crewByJob = groupCrew(credits.crew);
   const overview = movie.overview;
   const showOriginal = movie.originalTitle && movie.originalTitle !== title;
   const path = `/movies/${movie.id}`;
@@ -58,12 +85,9 @@ export default async function MoviePage({ params }: Props) {
   return (
     <>
       <section className="detail-hero">
-        <div
-          className="hero-bg"
-          style={movie.backdropUrl ? { backgroundImage: `url(${movie.backdropUrl})` } : { background: "#11131a" }}
-        />
+        <Backdrop url={movie.backdropUrl} fallbackStyle={{ background: "#11131a" }} />
         <div className="container detail-layout">
-          <Poster movie={movie} showRating={false} eager />
+          <Poster movie={movie} showRating={false} eager variant="detail" />
           <div className="detail-info">
             <h1>{title}</h1>
             {showOriginal ? <div className="original">{movie.originalTitle}</div> : null}
@@ -101,7 +125,25 @@ export default async function MoviePage({ params }: Props) {
             ) : null}
             {!overview && !movie.overviewUz ? <p className="overview muted">No synopsis yet.</p> : null}
 
-            {movie.director ? (
+            {crewByJob.length ? (
+              <dl className="facts">
+                {crewByJob.map(([job, people]) => (
+                  <div key={job} style={{ display: "contents" }}>
+                    <dt>{JOB_LABELS[job] ?? job}</dt>
+                    <dd>
+                      {people.map((p, i) => (
+                        <span key={p.personId}>
+                          {i ? ", " : ""}
+                          <Link href={`/people/${p.personId}`} className="link">
+                            {p.name}
+                          </Link>
+                        </span>
+                      ))}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            ) : movie.director ? (
               <dl className="facts">
                 <dt>Director</dt>
                 <dd>{movie.director}</dd>
@@ -162,6 +204,21 @@ export default async function MoviePage({ params }: Props) {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {credits.cast.length ? (
+        <section className="section">
+          <div className="container">
+            <div className="section-head">
+              <h2>Cast</h2>
+            </div>
+            <div className="row people-row">
+              {credits.cast.map((c) => (
+                <PersonCard key={`${c.personId}-${c.role}`} id={c.personId} name={c.name} profileUrl={c.profileUrl} role={c.role} />
+              ))}
             </div>
           </div>
         </section>

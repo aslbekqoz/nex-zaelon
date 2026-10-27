@@ -1,6 +1,6 @@
 # 🎬 CineMind AI
 
-A professional movie platform: search, genre filters, movie detail pages with trailers, similar movies, a personal watchlist, ratings and smart recommendations (personal and mood-based) with an explanation for every pick — plus the in-app **CineMind Content Studio** for editors: movie cards, descriptions, weekly collections and source-backed facts in Uzbek and English, with templates, brand settings and copy-ready output. Nothing is ever published automatically.
+A professional movie platform: search with genre, year, language and rating filters, movie detail pages with trailers, cast and crew, person pages, similar movies, a personal watchlist, ratings and smart recommendations (personal and mood-based) with an explanation for every pick — plus the in-app **CineMind Content Studio** for editors: movie cards, descriptions, weekly collections and source-backed facts in Uzbek and English, with templates, brand settings and copy-ready output. Nothing is ever published automatically.
 
 Stages and architecture: [`docs/PLAN.md`](docs/PLAN.md).
 
@@ -29,7 +29,7 @@ Without a key the platform runs on the starter catalogue: 30 well-known films wi
 2. Get a key under **Settings → API** (a v3 API key or a v4 Read Access Token both work)
 3. Put it on the `TMDB_API_KEY=` line in `.env` and restart the server
 
-Search then imports matching movies from TMDB into the catalogue. The first time a movie page is opened, its poster, rating, runtime, director and trailer are filled in. Uzbek titles and synopses are never overwritten.
+Search then imports matching movies from TMDB into the catalogue. The first time a movie page is opened, its poster, rating, runtime, trailer, cast and crew are filled in; opening a person's page adds their best-known films. Admins can also import TMDB's trending, popular, top-rated and now-playing lists from **Admin → Movies**. Uzbek titles and synopses are never overwritten, and movies an admin edited by hand are not refreshed.
 
 ### Admin and Content Studio
 
@@ -58,7 +58,7 @@ The **Admin** link (`/admin`) opens the admin panel: an overview, user managemen
 | `npm run dev` | Development server |
 | `npm run build` / `npm start` | Production build and server |
 | `npm run typecheck` | TypeScript check |
-| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, movie form) |
+| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, movie form, credits, filters, images) |
 | `npm run db:migrate` | Apply new migrations |
 | `npm run db:seed` | Load genres and starter movies (safe to re-run) |
 
@@ -67,10 +67,11 @@ The **Admin** link (`/admin`) opens the admin panel: an overview, user managemen
 ```
 db/migrations/        SQL migrations
 scripts/              migrate, seed, admin tools
-src/app/              pages (home, search, movie, for you, onboarding, sign in/up, watchlist, studio, admin)
+src/app/              pages (home, search, movie, person, for you, onboarding, sign in/up, watchlist, studio, admin)
 src/components/       UI components
 src/lib/auth/         sessions and authentication
-src/lib/movies/       catalogue, TMDB client, sync
+src/lib/movies/       catalogue, TMDB client, sync, credits, filters, image sizes
+src/lib/people/       person pages and filmographies
 src/lib/watchlist/    personal watchlists
 src/lib/recommend/    recommendation engine and moods
 src/lib/ratings/      user ratings
