@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChangeEmailForm } from "@/components/ChangeEmailForm";
+import { ChangeNameForm } from "@/components/ChangeNameForm";
 import { ChangePasswordForm } from "@/components/ChangePasswordForm";
 import { cancelPendingEmailChange } from "@/lib/auth/actions";
 import { getPendingChange } from "@/lib/auth/change-email";
@@ -42,6 +43,14 @@ export default async function AccountPage() {
             Didn&apos;t get the confirmation email? <Link href="/confirm-email" className="link">Resend it</Link>, or change the address below if it&apos;s wrong.
           </p>
         ) : null}
+      </section>
+
+      <section className="card-panel">
+        <h2>Change name</h2>
+        <p className="muted" style={{ margin: "4px 0 0" }}>
+          Shown in the header and, for editors, in the Content Studio and activity log.
+        </p>
+        <ChangeNameForm current={user.name} />
       </section>
 
       <section className="card-panel">

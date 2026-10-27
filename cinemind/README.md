@@ -53,7 +53,7 @@ Ways to confirm an account without email: **Admin → Users → Mark email verif
 
 Users change their email on the **Account** page (click your name in the header): they enter the new address and their current password, and the address changes once they open the link sent to the new one (valid 24 hours). The old address gets a notice when a change is requested and when it's done. Unconfirmed users can use this page to fix a mistyped address.
 
-The Account page also has **Change password** (current password + new one twice). The user stays signed in on that device, every other device is signed out, unused reset links stop working, and a notice is emailed to them.
+The Account page also has **Change name** (2–60 characters; extra spaces are tidied and invisible characters rejected) and **Change password** (current password + new one twice). The user stays signed in on that device, every other device is signed out, unused reset links stop working, and a notice is emailed to them.
 
 "Forgot your password?" on the sign-in page emails a one-time link that expires in 60 minutes. Using it sets a new password, signs the account out everywhere else and signs it in. To send real emails, set in `.env`:
 
