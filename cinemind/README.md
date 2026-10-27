@@ -69,6 +69,10 @@ The Account page also has a **profile picture**: JPEG, PNG, WebP, AVIF or GIF up
 
 Without `SMTP_URL`, development prints emails to the server console; production sends nothing and logs an error. Admins can also create a one-time reset link (valid 24 hours) from **Admin → Users** to send by hand.
 
+### Search engines and link previews
+
+With `APP_URL` set, the site serves `/robots.txt` and `/sitemap.xml` (every movie and credited person, read live from the catalogue). Movie and person pages carry canonical links, Open Graph and Twitter preview cards with the poster or photo, and schema.org structured data. Private pages (account, admin, studio, watchlist and sign-in flows) are kept out of search results.
+
 ### Security notes
 
 - Sign-in is limited to 5 failed attempts per email every 15 minutes.
@@ -87,7 +91,7 @@ Without `SMTP_URL`, development prints emails to the server console; production 
 | `npm run dev` | Development server |
 | `npm run build` / `npm start` | Production build and server |
 | `npm run typecheck` | TypeScript check |
-| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, email confirmation and change, profile pictures, account deletion, data export, device names, movie form, credits, filters, images) |
+| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, email confirmation and change, profile pictures, account deletion, data export, device names, structured data, movie form, credits, filters, images) |
 | `npm run db:migrate` | Apply new migrations |
 | `npm run db:seed` | Load genres and starter movies (safe to re-run) |
 | `npm run admin:create -- email` | Give a user admin rights (and confirm their email) |
@@ -112,5 +116,7 @@ src/lib/preferences/  favourite genres and onboarding
 src/lib/studio/       Content Studio: templates, renderer, formatters, drafts, facts
 src/lib/account/      "Download my data" export
 src/lib/admin/        admin panel: users, movie editing, dashboard
+src/lib/seo.ts        structured data for search engines
+src/lib/site.ts       the public site address (APP_URL)
 src/lib/audit.ts      audit log
 ```

@@ -172,6 +172,12 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] **Sign out** a single device or **Sign out all other devices**; both audited
 - [x] Migration 012 gives sessions a public `id` (the token hash never leaves the server), `user_agent` and `last_seen_at` (refreshed at most every 5 minutes); Admin → Users "last seen" uses it; the data export lists devices
 
+### Follow-up: search engines and link previews ✅
+- [x] `/robots.txt` keeps private and per-user pages (account, admin, studio, watchlist, recommendations, sign-in flows, avatars) out of search results and points to the sitemap
+- [x] `/sitemap.xml` lists the home and search pages, movies and credited people from the live catalogue (capped below the 50,000-URL limit)
+- [x] Movie and person pages have canonical URLs, Open Graph and Twitter cards (poster / photo as the preview image) and schema.org JSON-LD (`Movie` with genres, runtime, director, cast, rating only when TMDB has one, trailer; `Person`)
+- [x] Everything absolute comes from `APP_URL` (`src/lib/site.ts`); without it there's no sitemap and no structured data rather than wrong URLs
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).

@@ -15,6 +15,8 @@ import { getUserRating } from "@/lib/ratings/repository";
 import { displayTitle } from "@/lib/movies/types";
 import { setWatched, toggleWatchlist } from "@/lib/watchlist/actions";
 import { getWatchlistStatus } from "@/lib/watchlist/repository";
+import { jsonLdScript, movieJsonLd, OG_SITE, shareImage } from "@/lib/seo";
+import { appUrl } from "@/lib/site";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -51,9 +53,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const id = parseId((await params).id);
   const movie = id ? await getMovie(id) : null;
   if (!movie) return { title: "Movie not found" };
+  const title = displayTitle(movie);
+  const description = (movie.overview || movie.overviewUz || "").slice(0, 160) || undefined;
+  const image = shareImage(movie.posterUrl);
+  const path = `/movies/${movie.id}`;
   return {
-    title: displayTitle(movie),
-    description: (movie.overview || movie.overviewUz || "").slice(0, 160),
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      ...OG_SITE,
+      type: "video.movie",
+      url: path,
+      title: movie.year ? `${title} (${movie.year})` : title,
+      description,
+      ...(image ? { images: [{ url: image, alt: `${title} poster` }] } : {}),
+    },
+    twitter: { card: image ? "summary_large_image" : "summary", title, description, ...(image ? { images: [image] } : {}) },
   };
 }
 
@@ -82,8 +98,12 @@ export default async function MoviePage({ params }: Props) {
     `${movie.originalTitle || movie.title} ${movie.year ?? ""} trailer`,
   )}`;
 
+  const base = appUrl();
   return (
     <>
+      {base ? (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(movieJsonLd(movie, credits, base)) }} />
+      ) : null}
       <section className="detail-hero">
         <Backdrop url={movie.backdropUrl} fallbackStyle={{ background: "#11131a" }} />
         <div className="container detail-layout">
