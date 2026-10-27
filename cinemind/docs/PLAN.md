@@ -123,10 +123,18 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] `/verify-email` works without signing in; reopening a used link says it's already confirmed; replaced, expired, malformed and changed-address links are rejected
 - [x] Completing a password reset confirms the address
 - [x] Admin: "Email unverified" badge and filter, **Mark email verified**, count on the overview; every step in the audit log
-- [x] Soft by design: unconfirmed users can still use the site (a stricter mode can block sign-in or certain features later)
+- [x] ~~Soft by design~~ — made mandatory in the next follow-up
+
+### Follow-up: mandatory email confirmation ✅
+- [x] `EMAIL_VERIFICATION=required` (default): unconfirmed users can't use account features — watchlist, ratings, onboarding, Studio and Admin pages redirect to **Check your inbox**, and the matching actions are refused; the public catalogue stays open
+- [x] Sign-up goes to **Check your inbox**, then continues to onboarding once confirmed
+- [x] Studio and Admin check the role first, so non-editors still get a 404
+- [x] Migration 008 marks pre-existing accounts as confirmed so nobody is locked out
+- [x] Recovery without email: Admin → Users → Mark email verified, `npm run user:verify`, and `npm run admin:create` confirms the admin; production without SMTP shows "ask the administrator"
+- [x] `EMAIL_VERIFICATION=optional` restores the reminder-only behaviour
 
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).
-- Email confirmation doesn't block anything yet, and users can't change their email address themselves.
+- Users can't change their email address themselves (they can sign up again; an address taken by an unconfirmed account can be reclaimed through "Forgot password").
 - Roles are `user` and `admin`; every admin can use the Content Studio. A separate `editor` role can be added later without schema changes beyond the role check.

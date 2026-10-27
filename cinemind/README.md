@@ -47,7 +47,9 @@ The **Admin** link (`/admin`) opens the admin panel: an overview, user managemen
 
 ### Email: confirmation and password reset
 
-New accounts get an email with a link to confirm their address (valid 48 hours). Until they confirm, a banner reminds them and offers **Resend email**; the link works on any device without signing in. Confirmation is a reminder, not a gate — unconfirmed users can still use the site. Completing a password reset also confirms the address, and admins can mark an address as confirmed in **Admin → Users**.
+New accounts must confirm their email address before using account features (watchlist, ratings, onboarding, Studio, Admin). After signing up they see **Check your inbox** with a **Resend email** button; the link (valid 48 hours) works on any device without signing in. The public catalogue — home, search, movie and person pages — stays open. Completing a password reset also confirms the address.
+
+Ways to confirm an account without email: **Admin → Users → Mark email verified**, or on the server `npm run user:verify -- user@example.com` (`npm run admin:create` also confirms the admin's address). Accounts that existed before confirmation became mandatory were marked as confirmed. Set `EMAIL_VERIFICATION=optional` to go back to a reminder banner only.
 
 "Forgot your password?" on the sign-in page emails a one-time link that expires in 60 minutes. Using it sets a new password, signs the account out everywhere else and signs it in. To send real emails, set in `.env`:
 
@@ -75,6 +77,8 @@ Without `SMTP_URL`, development prints emails to the server console; production 
 | `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, email confirmation, movie form, credits, filters, images) |
 | `npm run db:migrate` | Apply new migrations |
 | `npm run db:seed` | Load genres and starter movies (safe to re-run) |
+| `npm run admin:create -- email` | Give a user admin rights (and confirm their email) |
+| `npm run user:verify -- email` | Confirm a user's email address |
 
 ## Structure
 

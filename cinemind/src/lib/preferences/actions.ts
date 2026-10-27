@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/auth/session";
+import { requireVerifiedUser } from "@/lib/auth/session";
 
 export type OnboardingState = { error?: string };
 
@@ -16,7 +16,7 @@ function ids(form: FormData, key: string) {
 }
 
 export async function saveOnboarding(_prev: OnboardingState, form: FormData): Promise<OnboardingState> {
-  const user = await requireUser("/onboarding");
+  const user = await requireVerifiedUser("/onboarding");
   const genreIds = ids(form, "genre");
   const movieIds = ids(form, "movie").slice(0, 50);
   if (!genreIds.length) return { error: "Pick at least one genre you enjoy." };

@@ -10,7 +10,7 @@ if (!email) {
 const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
 await client.connect();
 try {
-  const { rows, rowCount } = await client.query("UPDATE users SET role = 'admin' WHERE email = $1 RETURNING id", [email]);
+  const { rows, rowCount } = await client.query("UPDATE users SET role = 'admin', email_verified_at = COALESCE(email_verified_at, now()) WHERE email = $1 RETURNING id", [email]);
   if (rowCount) {
     await client.query(
       "INSERT INTO audit_log (actor_id, action, target_type, target_id, details) VALUES ($1, 'user.promote_cli', 'user', $2, '{}')",
@@ -21,7 +21,7 @@ try {
     console.error(`${email} not found. Sign up on the site first.`);
     process.exitCode = 1;
   } else {
-    console.log(`✓ ${email} is now an admin.`);
+    console.log(`✓ ${email} is now an admin (email marked as confirmed).`);
   }
 } finally {
   await client.end();

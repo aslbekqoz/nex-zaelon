@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { OnboardingForm } from "@/components/OnboardingForm";
-import { requireUser } from "@/lib/auth/session";
+import { requireVerifiedUser } from "@/lib/auth/session";
 import { query } from "@/lib/db";
 import { listGenres, listMovies } from "@/lib/movies/repository";
 import { getPreferences } from "@/lib/preferences/repository";
@@ -8,7 +8,7 @@ import { getPreferences } from "@/lib/preferences/repository";
 export const metadata: Metadata = { title: "Your taste" };
 
 export default async function OnboardingPage() {
-  const user = await requireUser("/onboarding");
+  const user = await requireVerifiedUser("/onboarding");
   const [genres, movies, prefs, rated] = await Promise.all([
     listGenres(),
     listMovies({ sort: "popular", limit: 18 }),
