@@ -22,7 +22,7 @@ export function AuthForm({ mode, action, next }: Props) {
       ) : null}
       {mode === "register" ? (
         <div className="field">
-          <label htmlFor="name">Ism</label>
+          <label htmlFor="name">Name</label>
           <input id="name" name="name" className="input" required minLength={2} maxLength={60} defaultValue={state.name} autoComplete="name" />
         </div>
       ) : null}
@@ -31,7 +31,7 @@ export function AuthForm({ mode, action, next }: Props) {
         <input id="email" name="email" type="email" className="input" required defaultValue={state.email} autoComplete="email" />
       </div>
       <div className="field">
-        <label htmlFor="password">Parol</label>
+        <label htmlFor="password">Password</label>
         <input
           id="password"
           name="password"
@@ -43,7 +43,7 @@ export function AuthForm({ mode, action, next }: Props) {
           autoComplete={mode === "register" ? "new-password" : "current-password"}
         />
       </div>
-      <SubmitButton pendingText="Kuting…">{mode === "register" ? "Akkaunt yaratish" : "Kirish"}</SubmitButton>
+      <SubmitButton pendingText="Please wait…">{mode === "register" ? "Create account" : "Sign in"}</SubmitButton>
     </form>
   );
 }

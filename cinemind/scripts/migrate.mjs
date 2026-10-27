@@ -1,4 +1,4 @@
-// db/migrations ichidagi .sql fayllarni tartib bilan, faqat bir martadan ishga tushiradi
+// Applies the .sql files in db/migrations in order, each exactly once
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,7 +7,7 @@ import pg from "pg";
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "db", "migrations");
 
 if (!process.env.DATABASE_URL) {
-  console.error("DATABASE_URL topilmadi. .env.example faylidan nusxa oling.");
+  console.error("DATABASE_URL is not set. Copy .env.example to .env.");
   process.exit(1);
 }
 
@@ -39,7 +39,7 @@ try {
     console.log(`✓ ${file}`);
     count++;
   }
-  console.log(count ? `${count} ta migratsiya bajarildi.` : "Baza allaqachon yangilangan.");
+  console.log(count ? `Applied ${count} migration(s).` : "Database is already up to date.");
 } finally {
   await client.end();
 }

@@ -7,7 +7,7 @@ import { getCurrentUser, safeNextPath } from "@/lib/auth/session";
 
 function movieIdFrom(form: FormData) {
   const id = Number(form.get("movieId"));
-  if (!Number.isSafeInteger(id) || id <= 0) throw new Error("Noto'g'ri film identifikatori");
+  if (!Number.isSafeInteger(id) || id <= 0) throw new Error("Invalid movie id");
   return id;
 }
 

@@ -193,6 +193,9 @@ button, input, select { font: inherit; color: inherit; }
 .detail-info .original { color: var(--text-muted); margin-top: 6px; font-size: 17px; }
 .detail-info .meta-row { margin: 18px 0; }
 .detail-info .overview { font-size: 17px; color: #d8dbe0; max-width: 760px; margin: 18px 0; }
+.overview-uz { max-width: 760px; margin: 0 0 18px; padding: 14px 16px; border-left: 3px solid var(--accent); background: rgb(255 255 255 / 0.03); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.overview-uz .eyebrow { font-size: 11px; margin-bottom: 4px; }
+.overview-uz p { margin: 0; color: #c9cdd4; font-size: 15px; }
 .facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; margin: 20px 0; font-size: 15px; }
 .facts dt { color: var(--text-faint); }
 .facts dd { margin: 0; }

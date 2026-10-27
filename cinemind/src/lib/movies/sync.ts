@@ -11,14 +11,14 @@ import {
   type TmdbMovieSummary,
 } from "./tmdb";
 
-// TMDB bilan sinxronlash. Har qanday xato faqat jurnalga yoziladi: tashqi API ishlamasa ham,
-// sayt mahalliy katalog bilan ishlashda davom etadi.
+// TMDB synchronisation. Errors are only logged: if the external API is down,
+// the site keeps working from the local catalogue.
 
 function yearOf(date?: string | null) {
   return date ? Number.parseInt(date.slice(0, 4), 10) : null;
 }
 
-/** Boshlang'ich (seed) film va TMDB yozuvi bir xil film ekanini yil bo'yicha tekshiradi. */
+/** Checks by release year that a local (seed) movie and a TMDB record are the same film. */
 function sameRelease(localDate: string | null, remoteDate?: string | null) {
   const a = yearOf(localDate);
   const b = yearOf(remoteDate);
@@ -80,11 +80,11 @@ async function upsertSummaries(items: TmdbMovieSummary[]) {
   }
 }
 
-// Bir xil so'z bo'yicha TMDB'ga bir soatda bir martadan ko'p murojaat qilmaymiz
+// Query TMDB at most once per hour for the same search term
 const recentSearches = new Map<string, number>();
 const SEARCH_TTL_MS = 60 * 60 * 1000;
 
-/** Qidiruv so'zi bo'yicha TMDB'dan topilgan filmlarni katalogga qo'shadi. */
+/** Adds movies found on TMDB for a search term to the catalogue. */
 export async function importFromSearch(q: string) {
   const key = q.trim().toLowerCase();
   if (!tmdbEnabled() || key.length < 2) return { imported: 0 };
@@ -97,12 +97,12 @@ export async function importFromSearch(q: string) {
     await upsertSummaries(results);
     return { imported: results.length };
   } catch (err) {
-    console.error("[tmdb] qidiruv importi:", (err as Error).message);
+    console.error("[tmdb] search import:", (err as Error).message);
     return { imported: 0, error: true };
   }
 }
 
-/** Batafsil sahifa uchun davomiylik, rejissyor, treyler va janrlarni to'ldiradi (14 kunda bir marta). */
+/** Fills in runtime, director, trailer and genres for the detail page (at most every 14 days). */
 export async function ensureDetails(movieId: number) {
   if (!tmdbEnabled()) return;
   const info = await getMovieSyncInfo(movieId);
@@ -111,7 +111,7 @@ export async function ensureDetails(movieId: number) {
   try {
     const d = await tmdbDetails(info.tmdb_id);
     if (!sameRelease(info.release_date, d.release_date)) {
-      console.warn(`[tmdb] #${movieId}: tmdb_id ${info.tmdb_id} boshqa filmga tegishli, o'tkazib yuborildi`);
+      console.warn(`[tmdb] #${movieId}: tmdb_id ${info.tmdb_id} belongs to a different film, skipped`);
       await query("UPDATE movies SET details_synced_at = now() WHERE id = $1", [movieId]);
       return;
     }
@@ -154,6 +154,6 @@ export async function ensureDetails(movieId: number) {
       );
     }
   } catch (err) {
-    console.error(`[tmdb] #${movieId} tafsilotlari:`, (err as Error).message);
+    console.error(`[tmdb] #${movieId} details:`, (err as Error).message);
   }
 }

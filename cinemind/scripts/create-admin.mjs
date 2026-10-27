@@ -1,9 +1,9 @@
-// Foydalanuvchiga administrator huquqini beradi: npm run admin:create -- email@example.com
+// Grants admin rights to a user: npm run admin:create -- email@example.com
 import pg from "pg";
 
 const email = process.argv[2]?.trim().toLowerCase();
 if (!email) {
-  console.error("Foydalanish: npm run admin:create -- email@example.com");
+  console.error("Usage: npm run admin:create -- email@example.com");
   process.exit(1);
 }
 
@@ -12,10 +12,10 @@ await client.connect();
 try {
   const { rowCount } = await client.query("UPDATE users SET role = 'admin' WHERE email = $1", [email]);
   if (!rowCount) {
-    console.error(`${email} topilmadi. Avval saytda ro'yxatdan o'ting.`);
+    console.error(`${email} not found. Sign up on the site first.`);
     process.exitCode = 1;
   } else {
-    console.log(`✓ ${email} endi administrator.`);
+    console.log(`✓ ${email} is now an admin.`);
   }
 } finally {
   await client.end();

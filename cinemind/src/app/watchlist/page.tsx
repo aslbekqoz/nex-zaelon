@@ -7,7 +7,7 @@ import { displayTitle } from "@/lib/movies/types";
 import { setWatched, toggleWatchlist } from "@/lib/watchlist/actions";
 import { getWatchlist } from "@/lib/watchlist/repository";
 
-export const metadata: Metadata = { title: "Ro'yxatim" };
+export const metadata: Metadata = { title: "My watchlist" };
 
 export default async function WatchlistPage() {
   const user = await requireUser("/watchlist");
@@ -17,9 +17,11 @@ export default async function WatchlistPage() {
   return (
     <div className="container">
       <div className="page-head">
-        <h1>Mening ro&apos;yxatim</h1>
+        <h1>My watchlist</h1>
         <p className="muted">
-          {items.length ? `${items.length} ta film · ${left} tasi hali ko'rilmagan` : "Ko'rmoqchi bo'lgan filmlaringizni shu yerda saqlang."}
+          {items.length
+            ? `${items.length} ${items.length === 1 ? "movie" : "movies"} · ${left} not watched yet`
+            : "Save the movies you want to watch here."}
         </p>
       </div>
 
@@ -35,7 +37,7 @@ export default async function WatchlistPage() {
                   {displayTitle(movie)}
                 </Link>
                 <div className="card-sub">
-                  {[movie.year, movie.genres.map((g) => g.nameUz).slice(0, 3).join(", ")].filter(Boolean).join(" · ")}
+                  {[movie.year, movie.genres.map((g) => g.name).slice(0, 3).join(", ")].filter(Boolean).join(" · ")}
                 </div>
               </div>
               <div className="wl-actions">
@@ -43,14 +45,14 @@ export default async function WatchlistPage() {
                   <input type="hidden" name="movieId" value={movie.id} />
                   <input type="hidden" name="watched" value={watched ? "0" : "1"} />
                   <SubmitButton className="btn btn-sm" pendingText="…">
-                    {watched ? "Ko'rilmagan qilish" : "Ko'rdim ✓"}
+                    {watched ? "Mark as unwatched" : "Mark as watched ✓"}
                   </SubmitButton>
                 </form>
                 <form action={toggleWatchlist}>
                   <input type="hidden" name="movieId" value={movie.id} />
                   <input type="hidden" name="path" value="/watchlist" />
                   <SubmitButton className="btn btn-sm btn-ghost" pendingText="…">
-                    Olib tashlash
+                    Remove
                   </SubmitButton>
                 </form>
               </div>
@@ -59,10 +61,10 @@ export default async function WatchlistPage() {
         </div>
       ) : (
         <div className="empty" style={{ marginTop: 16 }}>
-          <h2>Ro&apos;yxat bo&apos;sh</h2>
-          <p>Film sahifasidagi “Ro&apos;yxatga qo&apos;shish” tugmasini bosing.</p>
+          <h2>Your watchlist is empty</h2>
+          <p>Use the “Add to watchlist” button on any movie page.</p>
           <Link href="/search" className="btn btn-primary" style={{ marginTop: 12 }}>
-            Filmlarni ko&apos;rish
+            Browse movies
           </Link>
         </div>
       )}

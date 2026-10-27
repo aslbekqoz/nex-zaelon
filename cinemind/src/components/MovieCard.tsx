@@ -4,7 +4,7 @@ import { displayTitle } from "@/lib/movies/types";
 import { Poster } from "./Poster";
 
 export function MovieCard({ movie }: { movie: Movie }) {
-  const sub = [movie.year, movie.genres[0]?.nameUz].filter(Boolean).join(" · ");
+  const sub = [movie.year, movie.genres[0]?.name].filter(Boolean).join(" · ");
   return (
     <Link href={`/movies/${movie.id}`} className="card">
       <Poster movie={movie} />
@@ -23,7 +23,7 @@ export function MovieRow({ title, movies, href }: { title: string; movies: Movie
       <div className="container">
         <div className="section-head">
           <h2>{title}</h2>
-          {href ? <Link href={href}>Hammasi →</Link> : null}
+          {href ? <Link href={href}>See all →</Link> : null}
         </div>
         <div className="row">
           {movies.map((m) => (

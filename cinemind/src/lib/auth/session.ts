@@ -19,7 +19,7 @@ function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
-/** Yangi sessiya ochadi va cookie'ni o'rnatadi. Faqat server action yoki route handler ichida chaqiriladi. */
+/** Opens a new session and sets the cookie. Call only from a server action or route handler. */
 export async function createSession(userId: number) {
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
@@ -35,7 +35,7 @@ export async function createSession(userId: number) {
     path: "/",
     expires: expiresAt,
   });
-  // Muddati o'tgan sessiyalarni vaqti-vaqti bilan tozalab turamiz
+  // Opportunistically clean up this user's expired sessions
   await query("DELETE FROM sessions WHERE user_id = $1 AND expires_at < now()", [userId]);
 }
 
@@ -48,7 +48,7 @@ export async function destroySession() {
   store.delete(COOKIE_NAME);
 }
 
-/** Joriy foydalanuvchi; bir so'rov davomida bazaga faqat bir marta murojaat qilinadi. */
+/** The current user; hits the database at most once per request. */
 export const getCurrentUser = cache(async (): Promise<User | null> => {
   const token = (await cookies()).get(COOKIE_NAME)?.value;
   if (!token) return null;
@@ -67,7 +67,7 @@ export async function requireUser(nextPath = "/"): Promise<User> {
   return user;
 }
 
-/** Ochiq yo'naltirishning oldini oladi: faqat sayt ichidagi nisbiy manzillar. */
+/** Prevents open redirects: only same-site relative paths are allowed. */
 export function safeNextPath(value: unknown): string {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) {
     return "/";

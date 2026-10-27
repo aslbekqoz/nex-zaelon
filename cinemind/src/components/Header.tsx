@@ -7,7 +7,7 @@ export async function Header() {
   return (
     <header className="header">
       <div className="container header-inner">
-        <Link href="/" className="logo" aria-label="CineMind AI bosh sahifa">
+        <Link href="/" className="logo" aria-label="CineMind AI home">
           <span className="logo-mark" aria-hidden>
             C
           </span>
@@ -15,16 +15,16 @@ export async function Header() {
             CineMind <span className="ai">AI</span>
           </span>
         </Link>
-        <nav className="nav" aria-label="Asosiy menyu">
-          <Link href="/">Bosh sahifa</Link>
-          <Link href="/search">Filmlar</Link>
-          <Link href="/watchlist">Ro&apos;yxatim</Link>
+        <nav className="nav" aria-label="Main menu">
+          <Link href="/">Home</Link>
+          <Link href="/search">Movies</Link>
+          <Link href="/watchlist">My watchlist</Link>
         </nav>
         <form action="/search" className="header-search" role="search">
           <label className="sr-only" htmlFor="header-q">
-            Film qidirish
+            Search movies
           </label>
-          <input id="header-q" name="q" className="input" placeholder="Film nomini yozing…" autoComplete="off" />
+          <input id="header-q" name="q" className="input" placeholder="Search for a movie…" autoComplete="off" />
         </form>
         <div className="header-actions">
           {user ? (
@@ -32,17 +32,17 @@ export async function Header() {
               <span className="user-chip">{user.name}</span>
               <form action={logout}>
                 <button type="submit" className="btn btn-sm">
-                  Chiqish
+                  Sign out
                 </button>
               </form>
             </>
           ) : (
             <>
               <Link href="/login" className="btn btn-sm btn-ghost">
-                Kirish
+                Sign in
               </Link>
               <Link href="/register" className="btn btn-sm btn-primary hide-sm">
-                Ro&apos;yxatdan o&apos;tish
+                Sign up
               </Link>
             </>
           )}

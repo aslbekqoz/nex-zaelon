@@ -24,13 +24,13 @@ type MovieRow = {
   genres: Genre[] | null;
 };
 
-// Har bir filmga janrlarini JSON massiv sifatida biriktiruvchi umumiy SELECT
+// Shared SELECT that attaches each movie's genres as a JSON array
 const MOVIE_SELECT = `
   SELECT m.id, m.tmdb_id, m.title, m.title_uz, m.original_title, m.overview, m.overview_uz,
          m.director, m.release_date, m.runtime, m.rating, m.vote_count, m.original_language,
          m.poster_url, m.backdrop_url, m.trailer_youtube_key,
          COALESCE((
-           SELECT json_agg(json_build_object('id', g.id, 'slug', g.slug, 'nameUz', g.name_uz) ORDER BY g.name_uz)
+           SELECT json_agg(json_build_object('id', g.id, 'slug', g.slug, 'name', g.name_en, 'nameUz', g.name_uz) ORDER BY g.name_en)
              FROM movie_genres mg JOIN genres g ON g.id = mg.genre_id
             WHERE mg.movie_id = m.id
          ), '[]') AS genres
@@ -63,15 +63,15 @@ const ORDER_BY: Record<SortKey, string> = {
   popular: "m.popularity DESC, m.id",
   rating: "m.rating DESC NULLS LAST, m.vote_count DESC NULLS LAST, m.id",
   newest: "m.release_date DESC NULLS LAST, m.id",
-  title: "COALESCE(m.title_uz, m.title), m.id",
+  title: "m.title, m.id",
 };
 
 export async function listGenres(): Promise<Genre[]> {
   const { rows } = await query<Genre>(
-    `SELECT g.id, g.slug, g.name_uz AS "nameUz"
+    `SELECT g.id, g.slug, g.name_en AS name, g.name_uz AS "nameUz"
        FROM genres g
       WHERE EXISTS (SELECT 1 FROM movie_genres mg WHERE mg.genre_id = g.id)
-      ORDER BY g.name_uz`,
+      ORDER BY g.name_en`,
   );
   return rows;
 }
@@ -80,7 +80,7 @@ export async function searchMovies(params: SearchParams) {
   const q = params.q?.trim() || null;
   const page = Math.max(1, params.page ?? 1);
   const sort: SortKey = params.sort && params.sort in ORDER_BY ? params.sort : "popular";
-  // ILIKE uchun maxsus belgilarni ekranlaymiz
+  // Escape ILIKE wildcards
   const like = q ? `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
 
   const where = `
@@ -92,7 +92,7 @@ export async function searchMovies(params: SearchParams) {
              WHERE mg.movie_id = m.id AND g.slug = $3))`;
   const args = [q, like, params.genre || null];
 
-  // Qidiruv so'zi bo'lsa, eng yaqin moslik birinchi turadi
+  // With a search term, the closest match comes first
   const order = q && sort === "popular"
     ? `GREATEST(similarity(m.title, $1), similarity(COALESCE(m.title_uz, ''), $1)) DESC, ${ORDER_BY.popular}`
     : ORDER_BY[sort];
@@ -144,7 +144,7 @@ export async function listMovies(opts: { sort?: SortKey; genreSlug?: string; lim
   return rows.map(toMovie);
 }
 
-/** O'xshash filmlar: umumiy janrlar soni bo'yicha, so'ng reyting va mashhurlik bo'yicha. */
+/** Similar movies: by number of shared genres, then rating and popularity. */
 export async function getSimilarMovies(movieId: number, limit = 12) {
   const { rows } = await query<MovieRow>(
     `${MOVIE_SELECT}

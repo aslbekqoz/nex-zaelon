@@ -5,7 +5,7 @@ import { AuthForm } from "@/components/AuthForm";
 import { register } from "@/lib/auth/actions";
 import { getCurrentUser, safeNextPath } from "@/lib/auth/session";
 
-export const metadata: Metadata = { title: "Ro'yxatdan o'tish" };
+export const metadata: Metadata = { title: "Sign up" };
 
 export default async function RegisterPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const next = safeNextPath((await searchParams).next);
@@ -13,11 +13,11 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <h1>Akkaunt yaratish</h1>
-        <p className="muted">Filmlarni ro&apos;yxatga saqlang va shaxsiy tavsiyalar oling.</p>
+        <h1>Create your account</h1>
+        <p className="muted">Save movies to your watchlist and get personal recommendations.</p>
         <AuthForm mode="register" action={register} next={next} />
         <p className="auth-alt">
-          Akkauntingiz bormi? <Link href={`/login?next=${encodeURIComponent(next)}`}>Kirish</Link>
+          Already have an account? <Link href={`/login?next=${encodeURIComponent(next)}`}>Sign in</Link>
         </p>
       </div>
     </div>

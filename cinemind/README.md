@@ -1,62 +1,62 @@
 # 🎬 CineMind AI
 
-Professional kino platformasi: filmlarni qidirish, janrlar bo'yicha saralash, treylerlar, o'xshash filmlar va shaxsiy ro'yxat. Keyingi bosqichlarda aqlli tavsiyalar va sayt ichidagi **Content Studio** qo'shiladi.
+A professional movie platform: search, genre filters, movie detail pages with trailers, similar movies and a personal watchlist. Smart recommendations and the in-app **CineMind Content Studio** come in later stages.
 
-Bosqichlar va arxitektura: [`docs/PLAN.md`](docs/PLAN.md).
+Stages and architecture: [`docs/PLAN.md`](docs/PLAN.md).
 
-> Bu papka repozitoriydagi YouTube agent tizimidan butunlay mustaqil. Uning o'z `package.json` fayli bor va u tashqaridagi kodga tegmaydi.
+> This folder is fully independent of the YouTube agent system in the rest of the repository. It has its own `package.json` and does not touch any code outside it.
 
-## Ishga tushirish
+## Getting started
 
-Talablar: Node.js 22.9+ va PostgreSQL 14+ (eng osoni Docker orqali).
+Requirements: Node.js 22.9+ and PostgreSQL 14+ (easiest via Docker).
 
 ```bash
 cd cinemind
 cp .env.example .env
-docker compose up -d        # PostgreSQL 16 ni ishga tushiradi
+docker compose up -d        # starts PostgreSQL 16
 npm install
-npm run db:setup            # jadvallarni yaratadi va boshlang'ich filmlarni qo'shadi
+npm run db:setup            # creates tables and loads the starter catalogue
 npm run dev                 # http://localhost:3000
 ```
 
-O'zingizning PostgreSQL serveringiz bo'lsa, `.env` faylidagi `DATABASE_URL` qatorini o'zgartiring.
+If you already run PostgreSQL, change `DATABASE_URL` in `.env`.
 
-### Haqiqiy film ma'lumotlari (TMDB)
+### Real movie data (TMDB)
 
-Kalitsiz ham platforma boshlang'ich katalog (30 ta mashhur film, o'zbekcha nom va tavsiflar bilan) asosida to'liq ishlaydi. Haqiqiy posterlar, reytinglar, treylerlar va istalgan filmni qidirish uchun:
+Without a key the platform runs on the starter catalogue: 30 well-known films with English synopses plus Uzbek titles and synopses. For real posters, ratings, trailers and searching any movie:
 
-1. https://www.themoviedb.org saytida bepul akkaunt oching
-2. **Settings → API** bo'limida kalit oling (v3 API key yoki v4 Read Access Token, ikkalasi ham ishlaydi)
-3. Kalitni `.env` faylidagi `TMDB_API_KEY=` qatoriga yozing va serverni qayta ishga tushiring
+1. Create a free account at https://www.themoviedb.org
+2. Get a key under **Settings → API** (a v3 API key or a v4 Read Access Token both work)
+3. Put it on the `TMDB_API_KEY=` line in `.env` and restart the server
 
-Shundan keyin qidiruv TMDB'dan topilgan filmlarni katalogga qo'shadi. Film sahifasi birinchi marta ochilganda esa poster, reyting, davomiylik, rejissyor va treyler to'ldiriladi. O'zbekcha nom va tavsiflar ustidan yozilmaydi.
+Search then imports matching movies from TMDB into the catalogue. The first time a movie page is opened, its poster, rating, runtime, director and trailer are filled in. Uzbek titles and synopses are never overwritten.
 
-### Administrator
+### Admin
 
-Saytda ro'yxatdan o'ting, keyin:
+Sign up on the site, then:
 
 ```bash
-npm run admin:create -- siz@example.com
+npm run admin:create -- you@example.com
 ```
 
-## Buyruqlar
+## Commands
 
-| Buyruq | Vazifasi |
+| Command | Purpose |
 |---|---|
-| `npm run dev` | Ishlab chiqish serveri |
-| `npm run build` / `npm start` | Production build va ishga tushirish |
-| `npm run typecheck` | TypeScript tekshiruvi |
-| `npm run db:migrate` | Yangi migratsiyalarni qo'llash |
-| `npm run db:seed` | Janr va boshlang'ich filmlarni yozish (qayta ishga tushirish xavfsiz) |
+| `npm run dev` | Development server |
+| `npm run build` / `npm start` | Production build and server |
+| `npm run typecheck` | TypeScript check |
+| `npm run db:migrate` | Apply new migrations |
+| `npm run db:seed` | Load genres and starter movies (safe to re-run) |
 
-## Tuzilma
+## Structure
 
 ```
-db/migrations/        SQL migratsiyalar
-scripts/              migratsiya, seed, administrator
-src/app/              sahifalar (bosh sahifa, qidiruv, film, kirish, ro'yxat)
-src/components/       interfeys komponentlari
-src/lib/auth/         sessiyalar va autentifikatsiya
-src/lib/movies/       katalog, TMDB mijozi, sinxronlash
-src/lib/watchlist/    shaxsiy ro'yxatlar
+db/migrations/        SQL migrations
+scripts/              migrate, seed, admin tools
+src/app/              pages (home, search, movie, sign in/up, watchlist)
+src/components/       UI components
+src/lib/auth/         sessions and authentication
+src/lib/movies/       catalogue, TMDB client, sync
+src/lib/watchlist/    personal watchlists
 ```

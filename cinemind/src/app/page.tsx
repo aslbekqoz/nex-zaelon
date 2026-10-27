@@ -8,9 +8,9 @@ export default async function HomePage() {
   const [popular, topRated, scifi, drama, animation, genres] = await Promise.all([
     listMovies({ sort: "popular", limit: 16 }),
     listMovies({ sort: "rating", ratedOnly: true, limit: 16 }),
-    listMovies({ genreSlug: "ilmiy-fantastika", limit: 16 }),
+    listMovies({ genreSlug: "science-fiction", limit: 16 }),
     listMovies({ genreSlug: "drama", limit: 16 }),
-    listMovies({ genreSlug: "animatsiya", limit: 16 }),
+    listMovies({ genreSlug: "animation", limit: 16 }),
     listGenres(),
   ]);
 
@@ -29,7 +29,7 @@ export default async function HomePage() {
         />
         <div className="container">
           <div className="hero-content">
-            <div className="eyebrow">{featured ? "Tavsiya etamiz" : "CineMind AI"}</div>
+            <div className="eyebrow">{featured ? "Featured" : "CineMind AI"}</div>
             {featured ? (
               <>
                 <h1>{displayTitle(featured)}</h1>
@@ -37,24 +37,24 @@ export default async function HomePage() {
                   {featured.rating ? <span className="rating">★ {featured.rating.toFixed(1)}</span> : null}
                   {featured.year ? <span>{featured.year}</span> : null}
                   {featured.genres.slice(0, 3).map((g) => (
-                    <span key={g.id}>{g.nameUz}</span>
+                    <span key={g.id}>{g.name}</span>
                   ))}
                 </div>
-                <p>{featured.overviewUz || featured.overview}</p>
+                <p>{featured.overview || featured.overviewUz}</p>
                 <div className="hero-actions">
                   <Link href={`/movies/${featured.id}`} className="btn btn-primary btn-lg">
-                    Batafsil
+                    Details
                   </Link>
                   <Link href="/search" className="btn btn-lg">
-                    Barcha filmlar
+                    Browse all movies
                   </Link>
                 </div>
               </>
             ) : (
               <>
-                <h1>Katalog hali bo&apos;sh</h1>
+                <h1>The catalogue is empty</h1>
                 <p>
-                  <code>npm run db:setup</code> buyrug&apos;i bilan boshlang&apos;ich filmlarni qo&apos;shing.
+                  Run <code>npm run db:setup</code> to add the starter movies.
                 </p>
               </>
             )}
@@ -70,11 +70,11 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      <MovieRow title="Mashhur filmlar" movies={popular} href="/search?sort=popular" />
-      <MovieRow title="Eng yuqori baholangan" movies={topRated} href="/search?sort=rating" />
-      <MovieRow title="Ilmiy fantastika" movies={scifi} href="/search?genre=ilmiy-fantastika" />
+      <MovieRow title="Popular" movies={popular} href="/search?sort=popular" />
+      <MovieRow title="Top rated" movies={topRated} href="/search?sort=rating" />
+      <MovieRow title="Science fiction" movies={scifi} href="/search?genre=science-fiction" />
       <MovieRow title="Drama" movies={drama} href="/search?genre=drama" />
-      <MovieRow title="Animatsiya" movies={animation} href="/search?genre=animatsiya" />
+      <MovieRow title="Animation" movies={animation} href="/search?genre=animation" />
     </>
   );
 }

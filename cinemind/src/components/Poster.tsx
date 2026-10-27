@@ -1,7 +1,7 @@
 import type { Movie } from "@/lib/movies/types";
 import { displayTitle } from "@/lib/movies/types";
 
-// Poster bo'lmasa, film nomidan barqaror rangli gradient yasaymiz
+// Without a poster, derive a stable colour gradient from the title
 function hueFrom(text: string) {
   let h = 0;
   for (const ch of text) h = (h * 31 + ch.charCodeAt(0)) % 360;

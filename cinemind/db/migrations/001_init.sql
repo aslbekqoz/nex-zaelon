@@ -1,4 +1,4 @@
--- CineMind AI: 1-bosqich sxemasi (foydalanuvchilar, sessiyalar, filmlar, janrlar, ro'yxatlar)
+-- CineMind AI: stage 1 schema (users, sessions, movies, genres, watchlists)
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
@@ -11,7 +11,7 @@ CREATE TABLE users (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Sessiya tokenining o'zi emas, faqat SHA-256 xeshi saqlanadi
+-- Only the SHA-256 hash of the session token is stored, never the token itself
 CREATE TABLE sessions (
   token_hash TEXT PRIMARY KEY,
   user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -20,7 +20,7 @@ CREATE TABLE sessions (
 );
 CREATE INDEX sessions_user_idx ON sessions(user_id);
 
--- Janr identifikatorlari TMDB bilan bir xil, shuning uchun import qilishda moslashtirish shart emas
+-- Genre ids match TMDB's, so imports need no mapping
 CREATE TABLE genres (
   id      INTEGER PRIMARY KEY,
   slug    TEXT NOT NULL UNIQUE,
@@ -48,7 +48,7 @@ CREATE TABLE movies (
   trailer_youtube_key TEXT,
   -- 'seed' | 'tmdb' | 'manual'
   source            TEXT NOT NULL DEFAULT 'manual',
-  -- TMDB'dan to'liq ma'lumot (davomiylik, treyler) olingan vaqt
+  -- When full details (runtime, trailer) were last fetched from TMDB
   details_synced_at TIMESTAMPTZ,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()

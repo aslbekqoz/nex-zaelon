@@ -21,16 +21,16 @@ function parseId(raw: string) {
 function formatRuntime(min: number) {
   const h = Math.floor(min / 60);
   const m = min % 60;
-  return h ? `${h} soat ${m ? `${m} daqiqa` : ""}`.trim() : `${m} daqiqa`;
+  return h ? `${h}h ${m ? `${m}m` : ""}`.trim() : `${m}m`;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const id = parseId((await params).id);
   const movie = id ? await getMovie(id) : null;
-  if (!movie) return { title: "Film topilmadi" };
+  if (!movie) return { title: "Movie not found" };
   return {
     title: displayTitle(movie),
-    description: (movie.overviewUz || movie.overview || "").slice(0, 160),
+    description: (movie.overview || movie.overviewUz || "").slice(0, 160),
   };
 }
 
@@ -44,7 +44,7 @@ export default async function MoviePage({ params }: Props) {
   const status = user ? await getWatchlistStatus(user.id, movie.id) : { saved: false, watched: false };
 
   const title = displayTitle(movie);
-  const overview = movie.overviewUz || movie.overview;
+  const overview = movie.overview;
   const showOriginal = movie.originalTitle && movie.originalTitle !== title;
   const path = `/movies/${movie.id}`;
   const trailerSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(
@@ -63,10 +63,15 @@ export default async function MoviePage({ params }: Props) {
           <div className="detail-info">
             <h1>{title}</h1>
             {showOriginal ? <div className="original">{movie.originalTitle}</div> : null}
+            {movie.titleUz && movie.titleUz !== title ? (
+              <div className="original">
+                <span className="faint">Uzbek title:</span> <span lang="uz">{movie.titleUz}</span>
+              </div>
+            ) : null}
 
             <div className="meta-row">
               {movie.rating ? (
-                <span className="rating" title={movie.voteCount ? `${movie.voteCount} ta ovoz` : undefined}>
+                <span className="rating" title={movie.voteCount ? `${movie.voteCount} votes` : undefined}>
                   ★ {movie.rating.toFixed(1)}
                 </span>
               ) : null}
@@ -78,33 +83,35 @@ export default async function MoviePage({ params }: Props) {
             <div className="chips">
               {movie.genres.map((g) => (
                 <Link key={g.id} href={`/search?genre=${g.slug}`} className="chip">
-                  {g.nameUz}
+                  {g.name}
                 </Link>
               ))}
             </div>
 
-            {overview ? <p className="overview">{overview}</p> : <p className="overview muted">Tavsif hali qo&apos;shilmagan.</p>}
-            {!movie.overviewUz && movie.overview ? (
-              <p className="faint" style={{ fontSize: 14, marginTop: -8 }}>
-                O&apos;zbekcha tavsif hali tayyorlanmagan — asl manbadagi matn ko&apos;rsatildi.
-              </p>
+            {overview ? <p className="overview">{overview}</p> : null}
+            {movie.overviewUz ? (
+              <div className="overview-uz">
+                <div className="eyebrow">In Uzbek</div>
+                <p lang="uz">{movie.overviewUz}</p>
+              </div>
             ) : null}
+            {!overview && !movie.overviewUz ? <p className="overview muted">No synopsis yet.</p> : null}
 
             {movie.director ? (
               <dl className="facts">
-                <dt>Rejissyor</dt>
+                <dt>Director</dt>
                 <dd>{movie.director}</dd>
               </dl>
             ) : null}
 
             <div className="actions">
               {movie.trailerKey ? (
-                <a href="#treyler" className="btn btn-primary">
-                  ▶ Treylerni ko&apos;rish
+                <a href="#trailer" className="btn btn-primary">
+                  ▶ Watch trailer
                 </a>
               ) : (
                 <a href={trailerSearch} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
-                  ▶ Treylerni YouTube&apos;da izlash
+                  ▶ Find trailer on YouTube
                 </a>
               )}
               {user ? (
@@ -113,7 +120,7 @@ export default async function MoviePage({ params }: Props) {
                     <input type="hidden" name="movieId" value={movie.id} />
                     <input type="hidden" name="path" value={path} />
                     <SubmitButton className="btn" pendingText="…">
-                      {status.saved ? "✓ Ro'yxatda" : "+ Ro'yxatga qo'shish"}
+                      {status.saved ? "✓ In watchlist" : "+ Add to watchlist"}
                     </SubmitButton>
                   </form>
                   {status.saved ? (
@@ -121,14 +128,14 @@ export default async function MoviePage({ params }: Props) {
                       <input type="hidden" name="movieId" value={movie.id} />
                       <input type="hidden" name="watched" value={status.watched ? "0" : "1"} />
                       <SubmitButton className="btn btn-ghost" pendingText="…">
-                        {status.watched ? "Ko'rildi ✓" : "Ko'rdim deb belgilash"}
+                        {status.watched ? "Watched ✓" : "Mark as watched"}
                       </SubmitButton>
                     </form>
                   ) : null}
                 </>
               ) : (
                 <Link href={`/login?next=${encodeURIComponent(path)}`} className="btn">
-                  + Ro&apos;yxatga qo&apos;shish
+                  + Add to watchlist
                 </Link>
               )}
             </div>
@@ -137,15 +144,15 @@ export default async function MoviePage({ params }: Props) {
       </section>
 
       {movie.trailerKey ? (
-        <section className="section" id="treyler">
+        <section className="section" id="trailer">
           <div className="container">
             <div className="section-head">
-              <h2>Treyler</h2>
+              <h2>Trailer</h2>
             </div>
             <div className="trailer">
               <iframe
                 src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(movie.trailerKey)}`}
-                title={`${title} — treyler`}
+                title={`${title} — trailer`}
                 loading="lazy"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -155,7 +162,7 @@ export default async function MoviePage({ params }: Props) {
         </section>
       ) : null}
 
-      <MovieRow title="O'xshash filmlar" movies={similar} />
+      <MovieRow title="More like this" movies={similar} />
     </>
   );
 }

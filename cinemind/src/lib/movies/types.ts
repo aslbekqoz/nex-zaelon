@@ -1,6 +1,7 @@
 export type Genre = {
   id: number;
   slug: string;
+  name: string;
   nameUz: string;
 };
 
@@ -34,6 +35,6 @@ export type SearchParams = {
   page?: number;
 };
 
-export function displayTitle(m: Pick<Movie, "title" | "titleUz">) {
-  return m.titleUz || m.title;
+export function displayTitle(m: Pick<Movie, "title">) {
+  return m.title;
 }

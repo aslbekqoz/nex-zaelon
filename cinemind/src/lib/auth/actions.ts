@@ -20,10 +20,10 @@ export async function register(_prev: AuthState, form: FormData): Promise<AuthSt
   const password = typeof form.get("password") === "string" ? (form.get("password") as string) : "";
   const next = safeNextPath(form.get("next"));
 
-  if (name.length < 2 || name.length > 60) return { error: "Ism 2–60 belgidan iborat bo'lsin.", email, name };
-  if (!EMAIL_RE.test(email) || email.length > 254) return { error: "Email manzili noto'g'ri.", email, name };
-  if (password.length < 8) return { error: "Parol kamida 8 belgidan iborat bo'lsin.", email, name };
-  if (password.length > 72) return { error: "Parol 72 belgidan oshmasin.", email, name };
+  if (name.length < 2 || name.length > 60) return { error: "Name must be 2–60 characters.", email, name };
+  if (!EMAIL_RE.test(email) || email.length > 254) return { error: "Please enter a valid email address.", email, name };
+  if (password.length < 8) return { error: "Password must be at least 8 characters.", email, name };
+  if (password.length > 72) return { error: "Password must be at most 72 characters.", email, name };
 
   const hash = await bcrypt.hash(password, 12);
   const { rows } = await query<{ id: number }>(
@@ -31,7 +31,7 @@ export async function register(_prev: AuthState, form: FormData): Promise<AuthSt
      ON CONFLICT (email) DO NOTHING RETURNING id`,
     [email, name, hash],
   );
-  if (!rows[0]) return { error: "Bu email bilan akkaunt allaqachon mavjud.", email, name };
+  if (!rows[0]) return { error: "An account with this email already exists.", email, name };
 
   await createSession(rows[0].id);
   redirect(next);
@@ -47,7 +47,7 @@ export async function login(_prev: AuthState, form: FormData): Promise<AuthState
     [email],
   );
   const ok = rows[0] ? await bcrypt.compare(password, rows[0].password_hash) : false;
-  if (!rows[0] || !ok) return { error: "Email yoki parol noto'g'ri.", email };
+  if (!rows[0] || !ok) return { error: "Incorrect email or password.", email };
 
   await createSession(rows[0].id);
   redirect(next);

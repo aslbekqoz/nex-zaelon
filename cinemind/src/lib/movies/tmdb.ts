@@ -1,8 +1,8 @@
 import "server-only";
 
-// TMDB (themoviedb.org) uchun yupqa mijoz. Kalit berilmasa, platforma faqat mahalliy katalog bilan ishlaydi.
+// Thin client for TMDB (themoviedb.org). Without a key the platform runs on the local catalogue only.
 
-// TMDB_API_URL faqat sinov yoki proksi uchun; odatda o'rnatilmaydi
+// TMDB_API_URL is only for tests or a proxy; normally unset
 const API = process.env.TMDB_API_URL?.trim() || "https://api.themoviedb.org/3";
 const IMAGE = "https://image.tmdb.org/t/p";
 
@@ -39,7 +39,7 @@ async function tmdb<T>(path: string, params: Record<string, string> = {}): Promi
   url.searchParams.set("language", process.env.TMDB_LANGUAGE?.trim() || "en-US");
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
 
-  // v4 "Read Access Token" JWT ko'rinishida bo'ladi, v3 kalit esa qisqa hex satr
+  // A v4 "Read Access Token" is a JWT; a v3 key is a short hex string
   const headers: Record<string, string> = { accept: "application/json" };
   if (key.startsWith("eyJ")) headers.authorization = `Bearer ${key}`;
   else url.searchParams.set("api_key", key);
@@ -66,7 +66,7 @@ export function backdropUrl(path: string | null) {
   return path ? `${IMAGE}/w1280${path}` : null;
 }
 
-/** Rasmiy YouTube treylerini tanlaydi; bo'lmasa, istalgan treyler yoki tizer. */
+/** Picks the official YouTube trailer; otherwise any trailer or teaser. */
 export function pickTrailer(details: TmdbMovieDetails) {
   const vids = (details.videos?.results ?? []).filter((v) => v.site === "YouTube");
   const score = (v: (typeof vids)[number]) =>

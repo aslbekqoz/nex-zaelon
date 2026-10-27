@@ -2,7 +2,7 @@
   "name": "cinemind",
   "version": "0.1.0",
   "private": true,
-  "description": "CineMind AI — kino platformasi, aqlli tavsiyalar va kontent studiyasi",
+  "description": "CineMind AI — movie platform, smart recommendations and content studio",
   "engines": {
     "node": ">=22.9"
   },
