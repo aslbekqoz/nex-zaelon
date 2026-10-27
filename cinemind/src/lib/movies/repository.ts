@@ -79,7 +79,7 @@ export async function listGenres(): Promise<Genre[]> {
 export async function searchMovies(params: SearchParams) {
   const q = params.q?.trim() || null;
   const page = Math.max(1, params.page ?? 1);
-  const sort: SortKey = params.sort && params.sort in ORDER_BY ? params.sort : "popular";
+  const sort: SortKey = params.sort && Object.hasOwn(ORDER_BY, params.sort) ? params.sort : "popular";
   // Escape ILIKE wildcards
   const like = q ? `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
 

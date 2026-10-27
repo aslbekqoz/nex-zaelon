@@ -190,6 +190,12 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] Migrations hold an advisory lock, so containers starting together don't race
 - [x] `.github/workflows/cinemind.yml`: typecheck, unit tests, migrate + seed twice on PostgreSQL 16, build, smoke test of public pages and signed-out redirects, Docker build — on pushes and pull requests touching `cinemind/`
 
+### Follow-up: watchlist filters, sorting and CSV ✅
+- [x] **All / To watch / Watched** tabs with counts, and sorting by recently added, title, year, TMDB rating or the user's own rating (kept in the URL, so views can be bookmarked)
+- [x] Each entry shows when it was added and the user's rating; empty filtered views explain themselves
+- [x] **Export CSV** (`/watchlist/export`): UTF-8 with a BOM for Excel, Uzbek titles, genres, watched, ratings, links; cells that a spreadsheet would run as formulas are defused
+- [x] Search-option checks use `Object.hasOwn`, so `?sort=constructor` style values fall back to the default
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).

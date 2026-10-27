@@ -246,6 +246,10 @@ a.user-chip:hover .user-chip-name { color: var(--text); text-decoration: underli
 
 /* ---------- Watchlist ---------- */
 .wl-list { display: grid; gap: 12px; }
+.wl-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
+.wl-sort { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; }
+.chip-count { opacity: .7; font-variant-numeric: tabular-nums; margin-left: 2px; }
+.wl-mine { color: var(--accent); }
 .wl-item {
   display: grid; grid-template-columns: 72px 1fr auto; gap: 16px; align-items: center;
   background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px;
