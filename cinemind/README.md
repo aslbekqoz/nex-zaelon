@@ -51,6 +51,8 @@ New accounts must confirm their email address before using account features (wat
 
 Ways to confirm an account without email: **Admin → Users → Mark email verified**, or on the server `npm run user:verify -- user@example.com` (`npm run admin:create` also confirms the admin's address). Accounts that existed before confirmation became mandatory were marked as confirmed. Set `EMAIL_VERIFICATION=optional` to go back to a reminder banner only.
 
+Users change their email on the **Account** page (click your name in the header): they enter the new address and their current password, and the address changes once they open the link sent to the new one (valid 24 hours). The old address gets a notice when a change is requested and when it's done. Unconfirmed users can use this page to fix a mistyped address.
+
 "Forgot your password?" on the sign-in page emails a one-time link that expires in 60 minutes. Using it sets a new password, signs the account out everywhere else and signs it in. To send real emails, set in `.env`:
 
 - `APP_URL` — the site's public address (e.g. `https://cinemind.uz`); required in production because reset links are built from it, never from the request's Host header
@@ -65,6 +67,7 @@ Without `SMTP_URL`, development prints emails to the server console; production 
 - Behind a reverse proxy that sets `X-Forwarded-For` (nginx, Vercel, Cloudflare…), set `TRUST_PROXY_HEADERS=1` to also limit sign-ins and sign-ups per IP. Leave it unset otherwise, since those headers can be forged.
 - Disabled accounts are signed out everywhere and can't sign in.
 - Confirmation emails can be re-sent 3 times per hour; a link only confirms the address it was sent to.
+- Email changes need the current password (wrong guesses count toward the sign-in lockout), are limited to 3 per hour, and make older reset and confirmation links stop working.
 - Password reset requests are limited to 3 per email per hour; the reply is the same whether or not an account exists, and only a hash of each reset token is stored.
 
 ## Commands
@@ -74,7 +77,7 @@ Without `SMTP_URL`, development prints emails to the server console; production 
 | `npm run dev` | Development server |
 | `npm run build` / `npm start` | Production build and server |
 | `npm run typecheck` | TypeScript check |
-| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, email confirmation, movie form, credits, filters, images) |
+| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, email confirmation and change, movie form, credits, filters, images) |
 | `npm run db:migrate` | Apply new migrations |
 | `npm run db:seed` | Load genres and starter movies (safe to re-run) |
 | `npm run admin:create -- email` | Give a user admin rights (and confirm their email) |
@@ -85,9 +88,9 @@ Without `SMTP_URL`, development prints emails to the server console; production 
 ```
 db/migrations/        SQL migrations
 scripts/              migrate, seed, admin tools
-src/app/              pages (home, search, movie, person, for you, onboarding, sign in/up, password reset, email confirmation, watchlist, studio, admin)
+src/app/              pages (home, search, movie, person, for you, onboarding, sign in/up, account, password reset, email confirmation, watchlist, studio, admin)
 src/components/       UI components
-src/lib/auth/         sessions, authentication, rate limits, password reset, email confirmation
+src/lib/auth/         sessions, authentication, rate limits, password reset, email confirmation and change
 src/lib/email/        outgoing email (SMTP) and templates
 src/lib/movies/       catalogue, TMDB client, sync, credits, filters, image sizes
 src/lib/people/       person pages and filmographies

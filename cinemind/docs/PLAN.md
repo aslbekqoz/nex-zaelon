@@ -133,8 +133,18 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] Recovery without email: Admin → Users → Mark email verified, `npm run user:verify`, and `npm run admin:create` confirms the admin; production without SMTP shows "ask the administrator"
 - [x] `EMAIL_VERIFICATION=optional` restores the reminder-only behaviour
 
+### Follow-up: changing the account email ✅
+- [x] Migration 009: `email_changes` (old and new address, hashed one-time token, expiry, used/cancelled); `auth_attempts` gains `email_change`
+- [x] **Account** page (`/account`, linked from the user's name in the header, also on phones): name, email with confirmation status, change form, pending change with **Cancel**
+- [x] New address + current password; wrong passwords share the sign-in lockout; same, invalid and taken addresses rejected; 3 requests per hour
+- [x] The address changes only after the link sent to the new address is opened (24 hours); a newer request or cancel retires older links; reopening a used link says it's done
+- [x] In one transaction: switch the address (counts as confirmed), retire other pending changes, invalidate reset and confirmation links sent to the old address; a race with another account taking the address is rejected
+- [x] Security notices to the old address when a change is requested and when it completes (new address masked, with a password reset link)
+- [x] Unconfirmed users can open the Account page to fix a mistyped address ("Wrong address? Change it" on **Check your inbox**)
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).
-- Users can't change their email address themselves (they can sign up again; an address taken by an unconfirmed account can be reclaimed through "Forgot password").
+- An address taken by someone else's unconfirmed account can be reclaimed by its owner through "Forgot password".
+- Users can't change their name or password from the Account page yet (password changes go through "Forgot password").
 - Roles are `user` and `admin`; every admin can use the Content Studio. A separate `editor` role can be added later without schema changes beyond the role check.
