@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { audit } from "@/lib/audit";
 import { requireEditor } from "@/lib/auth/session";
 import { db, query } from "@/lib/db";
 import { getMovie } from "@/lib/movies/repository";
@@ -70,6 +71,7 @@ export async function createDraft(_prev: FormState, form: FormData): Promise<For
      VALUES ($1, $2, $3, $4, $5, $6, $7, $7) RETURNING id`,
     [kind, language, generated.title, generated.body, generated.movieIds, generated.templateId, user.id],
   );
+  await audit(user.id, "draft.create", { type: "draft", id: rows[0].id }, { kind, language, movies: generated.movieIds.length });
   revalidatePath("/studio");
   redirect(`/studio/drafts/${rows[0].id}`);
 }
@@ -140,6 +142,7 @@ export async function aiWriteDraft(_prev: FormState, form: FormData): Promise<Fo
       g.body,
       user.id,
     ]);
+    await audit(user.id, "draft.ai_write", { type: "draft", id: draft.id });
   } catch (err) {
     if (err instanceof AiUnavailableError) return { error: err.message };
     console.error("[studio] AI writing failed:", err);
@@ -163,8 +166,9 @@ export async function duplicateDraft(form: FormData) {
 }
 
 export async function deleteDraft(form: FormData) {
-  await requireEditor();
-  await query("DELETE FROM studio_drafts WHERE id = $1", [id(form)]);
+  const user = await requireEditor();
+  const { rows } = await query<{ id: number; title: string }>("DELETE FROM studio_drafts WHERE id = $1 RETURNING id, title", [id(form)]);
+  if (rows[0]) await audit(user.id, "draft.delete", { type: "draft", id: rows[0].id }, { title: rows[0].title });
   revalidatePath("/studio");
   redirect("/studio");
 }
@@ -238,21 +242,24 @@ export async function saveTemplate(_prev: FormState, form: FormData): Promise<Fo
   } finally {
     client.release();
   }
+  await audit(user.id, templateId ? "template.update" : "template.create", { type: "template", id: savedId! }, { name, kind, language, isDefault });
   revalidatePath("/studio/templates");
   if (!templateId) redirect(`/studio/templates/${savedId}`);
   return { ok: "Template saved" };
 }
 
 export async function deleteTemplate(form: FormData) {
-  await requireEditor();
+  const user = await requireEditor();
   const templateId = id(form);
   // Keep at least one template per content type and language
-  await query(
+  const { rows } = await query<{ name: string }>(
     `DELETE FROM studio_templates t
       WHERE t.id = $1
-        AND (SELECT count(*) FROM studio_templates o WHERE o.kind = t.kind AND o.language = t.language) > 1`,
+        AND (SELECT count(*) FROM studio_templates o WHERE o.kind = t.kind AND o.language = t.language) > 1
+      RETURNING t.name`,
     [templateId],
   );
+  if (rows[0]) await audit(user.id, "template.delete", { type: "template", id: templateId }, { name: rows[0].name });
   revalidatePath("/studio/templates");
   redirect("/studio/templates");
 }
@@ -281,6 +288,7 @@ export async function createFact(_prev: FormState, form: FormData): Promise<Form
     [movieId, language, text, sourceUrl, sourceTitle, user.id],
   );
   if (!rowCount) return { error: "That movie no longer exists." };
+  await audit(user.id, "fact.create", { type: "movie", id: movieId }, { language, source: sourceUrl });
   revalidatePath("/studio/facts");
   return { ok: "Fact added as unverified. Check the source, then mark it verified." };
 }
@@ -296,12 +304,14 @@ export async function reviewFact(form: FormData) {
       WHERE id = $1`,
     [id(form), status, str(form, "note").slice(0, 300), user.id],
   );
+  await audit(user.id, `fact.${status === "verified" ? "verify" : status === "rejected" ? "reject" : "reset"}`, { type: "fact", id: id(form) });
   revalidatePath("/studio/facts");
 }
 
 export async function deleteFact(form: FormData) {
-  await requireEditor();
-  await query("DELETE FROM studio_facts WHERE id = $1", [id(form)]);
+  const user = await requireEditor();
+  const { rowCount } = await query("DELETE FROM studio_facts WHERE id = $1", [id(form)]);
+  if (rowCount) await audit(user.id, "fact.delete", { type: "fact", id: id(form) });
   revalidatePath("/studio/facts");
 }
 
@@ -332,6 +342,7 @@ export async function saveBrandSettings(_prev: FormState, form: FormData): Promi
     [brandName, signature, hashtags, siteUrl, on("includeRating"), on("includeRuntime"), on("includeGenres"),
      on("includeDirector"), on("includeTrailer"), user.id],
   );
+  await audit(user.id, "brand.update", { type: "brand", id: 1 }, { brandName, siteUrl });
   revalidatePath("/studio", "layout");
   return { ok: "Brand settings saved. Regenerate drafts to apply them." };
 }

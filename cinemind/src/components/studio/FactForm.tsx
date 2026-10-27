@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { ActionForm } from "@/components/ActionForm";
 import { SubmitButton } from "@/components/SubmitButton";
 import { createFact } from "@/lib/studio/actions";
 import { FormMessage } from "./FormMessage";
@@ -13,7 +14,7 @@ export function FactForm({ movies, movieId }: { movies: { id: number; title: str
   }, [state]);
 
   return (
-    <form action={action} ref={formRef} className="card-panel form">
+    <ActionForm action={action} ref={formRef} className="card-panel form">
       <h2>Add a fact</h2>
       <div className="new-options">
         <div className="field">
@@ -55,6 +56,6 @@ export function FactForm({ movies, movieId }: { movies: { id: number; title: str
         <SubmitButton pendingText="Adding…">Add fact</SubmitButton>
         <FormMessage state={state} />
       </div>
-    </form>
+    </ActionForm>
   );
 }

@@ -55,7 +55,7 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
   const { rows } = await query<User>(
     `SELECT u.id, u.email, u.name, u.role
        FROM sessions s JOIN users u ON u.id = s.user_id
-      WHERE s.token_hash = $1 AND s.expires_at > now()`,
+      WHERE s.token_hash = $1 AND s.expires_at > now() AND u.disabled_at IS NULL`,
     [hashToken(token)],
   );
   return rows[0] ?? null;
@@ -67,8 +67,15 @@ export async function requireUser(nextPath = "/"): Promise<User> {
   return user;
 }
 
-/** Editors (admins) only; everyone else gets a 404 so the studio isn't advertised. */
+/** Editors only; everyone else gets a 404 so the studio isn't advertised. Today every admin is an editor. */
 export async function requireEditor(nextPath = "/studio"): Promise<User> {
+  const user = await requireUser(nextPath);
+  if (user.role !== "admin") notFound();
+  return user;
+}
+
+/** Admin panel access; same rule as the studio for now, kept separate so roles can diverge later. */
+export async function requireAdmin(nextPath = "/admin"): Promise<User> {
   const user = await requireUser(nextPath);
   if (user.role !== "admin") notFound();
   return user;

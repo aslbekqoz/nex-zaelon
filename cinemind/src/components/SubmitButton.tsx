@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
+import { useActionFormPending } from "./ActionForm";
 
 export function SubmitButton({
   children,
@@ -11,7 +12,8 @@ export function SubmitButton({
   pendingText?: string;
   className?: string;
 }) {
-  const { pending } = useFormStatus();
+  const status = useFormStatus();
+  const pending = useActionFormPending() ?? status.pending;
   return (
     <button type="submit" className={className} disabled={pending}>
       {pending && pendingText ? pendingText : children}

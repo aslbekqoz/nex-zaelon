@@ -20,7 +20,12 @@ export async function Header() {
           <Link href="/search">Movies</Link>
           <Link href="/recommendations">For you</Link>
           <Link href="/watchlist">My watchlist</Link>
-          {user?.role === "admin" ? <Link href="/studio">Studio</Link> : null}
+          {user?.role === "admin" ? (
+            <>
+              <Link href="/studio">Studio</Link>
+              <Link href="/admin">Admin</Link>
+            </>
+          ) : null}
         </nav>
         <form action="/search" className="header-search" role="search">
           <label className="sr-only" htmlFor="header-q">

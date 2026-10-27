@@ -45,8 +45,9 @@ async function upsertSummaries(items: TmdbMovieSummary[]) {
            poster_url = COALESCE(EXCLUDED.poster_url, movies.poster_url),
            backdrop_url = COALESCE(EXCLUDED.backdrop_url, movies.backdrop_url),
            updated_at = now()
-         WHERE movies.release_date IS NULL OR EXCLUDED.release_date IS NULL
-            OR abs(extract(year FROM movies.release_date) - extract(year FROM EXCLUDED.release_date)) <= 1
+         WHERE NOT movies.sync_locked
+           AND (movies.release_date IS NULL OR EXCLUDED.release_date IS NULL
+            OR abs(extract(year FROM movies.release_date) - extract(year FROM EXCLUDED.release_date)) <= 1)
          RETURNING id`,
         [
           m.id,
@@ -106,7 +107,8 @@ export async function importFromSearch(q: string) {
 export async function ensureDetails(movieId: number) {
   if (!tmdbEnabled()) return;
   const info = await getMovieSyncInfo(movieId);
-  if (!info?.tmdb_id || info.synced) return;
+  // Locked movies were edited by an admin; their data is not refreshed from TMDB
+  if (!info?.tmdb_id || info.synced || info.sync_locked) return;
 
   try {
     const d = await tmdbDetails(info.tmdb_id);

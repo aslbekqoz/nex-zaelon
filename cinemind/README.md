@@ -43,6 +43,14 @@ A **Studio** link then appears in the header (`/studio`). Create drafts from tem
 
 Optional: set `ANTHROPIC_API_KEY` in `.env` to enable **Write synopsis with AI** for movie cards and descriptions.
 
+The **Admin** link (`/admin`) opens the admin panel: an overview, user management (admin rights, disabling accounts, signing users out), adding and editing movies by hand (including Uzbek titles and synopses), and the audit log of admin and studio actions.
+
+### Security notes
+
+- Sign-in is limited to 5 failed attempts per email every 15 minutes.
+- Behind a reverse proxy that sets `X-Forwarded-For` (nginx, Vercel, Cloudflare…), set `TRUST_PROXY_HEADERS=1` to also limit sign-ins and sign-ups per IP. Leave it unset otherwise, since those headers can be forged.
+- Disabled accounts are signed out everywhere and can't sign in.
+
 ## Commands
 
 | Command | Purpose |
@@ -50,7 +58,7 @@ Optional: set `ANTHROPIC_API_KEY` in `.env` to enable **Write synopsis with AI**
 | `npm run dev` | Development server |
 | `npm run build` / `npm start` | Production build and server |
 | `npm run typecheck` | TypeScript check |
-| `npm test` | Unit tests (recommendation engine, Content Studio) |
+| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, movie form) |
 | `npm run db:migrate` | Apply new migrations |
 | `npm run db:seed` | Load genres and starter movies (safe to re-run) |
 
@@ -59,7 +67,7 @@ Optional: set `ANTHROPIC_API_KEY` in `.env` to enable **Write synopsis with AI**
 ```
 db/migrations/        SQL migrations
 scripts/              migrate, seed, admin tools
-src/app/              pages (home, search, movie, for you, onboarding, sign in/up, watchlist, studio)
+src/app/              pages (home, search, movie, for you, onboarding, sign in/up, watchlist, studio, admin)
 src/components/       UI components
 src/lib/auth/         sessions and authentication
 src/lib/movies/       catalogue, TMDB client, sync
@@ -68,4 +76,6 @@ src/lib/recommend/    recommendation engine and moods
 src/lib/ratings/      user ratings
 src/lib/preferences/  favourite genres and onboarding
 src/lib/studio/       Content Studio: templates, renderer, formatters, drafts, facts
+src/lib/admin/        admin panel: users, movie editing, dashboard
+src/lib/audit.ts      audit log
 ```

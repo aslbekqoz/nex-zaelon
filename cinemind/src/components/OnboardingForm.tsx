@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import type { Genre, Movie } from "@/lib/movies/types";
 import { saveOnboarding } from "@/lib/preferences/actions";
 import { Poster } from "./Poster";
+import { ActionForm } from "./ActionForm";
 import { SubmitButton } from "./SubmitButton";
 
 type Props = {
@@ -18,7 +19,7 @@ export function OnboardingForm({ genres, movies, selectedGenreIds, ratedMovieIds
   const selected = new Set(selectedGenreIds);
   const rated = new Set(ratedMovieIds);
   return (
-    <form action={action}>
+    <ActionForm action={action}>
       <section className="onboard-section">
         <h2>1. Genres you enjoy</h2>
         <p className="muted">Pick as many as you like.</p>
@@ -59,6 +60,6 @@ export function OnboardingForm({ genres, movies, selectedGenreIds, ratedMovieIds
           </span>
         ) : null}
       </div>
-    </form>
+    </ActionForm>
   );
 }

@@ -120,8 +120,8 @@ export async function getMovie(id: number): Promise<Movie | null> {
 }
 
 export async function getMovieSyncInfo(id: number) {
-  const { rows } = await query<{ tmdb_id: number | null; source: string; release_date: string | null; synced: boolean }>(
-    `SELECT tmdb_id, source, release_date,
+  const { rows } = await query<{ tmdb_id: number | null; source: string; release_date: string | null; synced: boolean; sync_locked: boolean }>(
+    `SELECT tmdb_id, source, release_date, sync_locked,
             (details_synced_at IS NOT NULL AND details_synced_at > now() - interval '14 days') AS synced
        FROM movies WHERE id = $1`,
     [id],

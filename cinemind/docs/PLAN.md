@@ -38,6 +38,8 @@ src/lib/
   ratings/           user ratings
   preferences/       favourite genres, onboarding
   studio/            Content Studio: templates, renderer, formatters, drafts, facts, brand
+  admin/             admin panel: users, manual movie editing, dashboard stats
+  audit.ts           audit log
 ```
 
 ### Extension point for future integrations
@@ -92,13 +94,19 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] Optional "Write synopsis with AI" (Claude API via `@anthropic-ai/sdk`, model `claude-opus-5-5`, server-side refusal fallback enabled) for movie cards and descriptions — only when `ANTHROPIC_API_KEY` is set; uses only the movie's data, replaces only the synopsis, and the editor reviews it before use. Facts are never AI-generated
 - [x] No automatic publishing to any external platform
 
-### Stage 5: admin panel
-- Admin area (role check on `users.role`)
-- Brand signature and formatting settings, template management
-- User list, manual movie creation and editing
-- Security: sign-in rate limiting, audit log
+### Stage 5: admin panel ✅
+- [x] Migration 004: `users.disabled_at`, `movies.sync_locked`, `auth_attempts`, `audit_log`
+- [x] Admin area at `/admin` (role check on `users.role`; everyone else gets a 404), linked from the header for admins
+- [x] Overview: users, movies, ratings, drafts, items needing attention (facts awaiting review, failed sign-ins, disabled accounts), integration status, recent activity
+- [x] Users: search and filter; make/remove admin; disable/enable (disabling signs the user out everywhere); sign out everywhere. You can't change your own role or disable yourself, and at least one active admin always remains (enforced under a database lock)
+- [x] Movies: search, add by hand, edit every field (English and Uzbek titles/synopses, director, date, runtime, language, poster, backdrop, trailer from any YouTube link, genres), delete. Editing a TMDB movie locks it against TMDB refreshes unless unticked
+- [x] Brand signature, formatting settings and templates managed in the Content Studio, linked from the admin menu
+- [x] Security: per-email sign-in limit (5 failures / 15 min, reset by a successful sign-in), per-IP sign-in (20 / 15 min) and sign-up (5 / hour) limits when `TRUST_PROXY_HEADERS=1`; constant-time sign-in for unknown emails; "account disabled" shown only after a correct password
+- [x] Audit log of admin and studio actions (users, movies, drafts, templates, facts, brand, CLI promotions) with filters and paging
+- [x] Forms keep what you typed when the server reports a validation error
 
-## Known limitations (stage 1)
+## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).
-- Sign-in attempts are not rate limited yet (stage 5).
+- There is no password reset or email verification yet (both need an email provider).
+- Roles are `user` and `admin`; every admin can use the Content Studio. A separate `editor` role can be added later without schema changes beyond the role check.

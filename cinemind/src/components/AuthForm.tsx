@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import type { AuthState } from "@/lib/auth/actions";
+import { ActionForm } from "./ActionForm";
 import { SubmitButton } from "./SubmitButton";
 
 type Props = {
@@ -13,7 +14,7 @@ type Props = {
 export function AuthForm({ mode, action, next }: Props) {
   const [state, formAction] = useActionState(action, {});
   return (
-    <form action={formAction} className="form">
+    <ActionForm action={formAction} className="form">
       <input type="hidden" name="next" value={next} />
       {state.error ? (
         <div className="form-error" role="alert">
@@ -44,6 +45,6 @@ export function AuthForm({ mode, action, next }: Props) {
         />
       </div>
       <SubmitButton pendingText="Please wait…">{mode === "register" ? "Create account" : "Sign in"}</SubmitButton>
-    </form>
+    </ActionForm>
   );
 }

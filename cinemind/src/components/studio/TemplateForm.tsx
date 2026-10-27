@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
+import { ActionForm } from "@/components/ActionForm";
 import { SubmitButton } from "@/components/SubmitButton";
 import { saveTemplate } from "@/lib/studio/actions";
 import type { ContentKind, Language } from "@/lib/studio/context";
@@ -31,7 +32,7 @@ export function TemplateForm({ template, kind, language, kinds, sample }: Props)
   }, [body, sample]);
 
   return (
-    <form action={action} className="editor">
+    <ActionForm action={action} className="editor">
       <div className="editor-main">
         {editing ? <input type="hidden" name="id" value={template!.id} /> : null}
         <div className="new-options">
@@ -77,6 +78,6 @@ export function TemplateForm({ template, kind, language, kinds, sample }: Props)
         </div>
         <div className="preview" dangerouslySetInnerHTML={{ __html: preview }} />
       </aside>
-    </form>
+    </ActionForm>
   );
 }

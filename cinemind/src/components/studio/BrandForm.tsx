@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { ActionForm } from "@/components/ActionForm";
 import { SubmitButton } from "@/components/SubmitButton";
 import { saveBrandSettings } from "@/lib/studio/actions";
 import type { BrandSettings } from "@/lib/studio/context";
@@ -17,7 +18,7 @@ const TOGGLES: { name: keyof BrandSettings; label: string }[] = [
 export function BrandForm({ brand }: { brand: BrandSettings }) {
   const [state, action] = useActionState(saveBrandSettings, {});
   return (
-    <form action={action} className="card-panel form" style={{ maxWidth: 720 }}>
+    <ActionForm action={action} className="card-panel form" style={{ maxWidth: 720 }}>
       <div className="field">
         <label htmlFor="brandName">Brand name</label>
         <input id="brandName" name="brandName" className="input" defaultValue={brand.brandName} required maxLength={80} />
@@ -46,6 +47,6 @@ export function BrandForm({ brand }: { brand: BrandSettings }) {
         <SubmitButton pendingText="Saving…">Save settings</SubmitButton>
         <FormMessage state={state} />
       </div>
-    </form>
+    </ActionForm>
   );
 }

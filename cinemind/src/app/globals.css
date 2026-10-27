@@ -352,6 +352,32 @@ button, input, select { font: inherit; color: inherit; }
 .help summary { cursor: pointer; font-weight: 650; }
 .help .facts { margin-top: 14px; }
 
+/* ---------- Admin ---------- */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); gap: 12px; margin-bottom: 18px; }
+.stat-card { display: grid; gap: 2px; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elevated); }
+a.stat-card:hover { border-color: var(--accent); }
+.stat-label { color: var(--text-muted); font-size: 14px; font-weight: 600; }
+.stat-value { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; }
+.stat-sub { font-size: 13px; }
+.admin-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 18px; align-items: start; }
+@media (max-width: 900px) { .admin-columns { grid-template-columns: 1fr; } }
+.admin-columns .card-panel { margin: 0; }
+.plain-list { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; font-size: 15px; }
+.plain-list a:hover { color: var(--accent); }
+.audit-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; font-size: 14.5px; }
+.audit-list li { display: grid; grid-template-columns: 150px 1fr; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.audit-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+@media (max-width: 560px) { .audit-list li { grid-template-columns: 1fr; gap: 2px; } }
+.audit-time { font-size: 13px; }
+.audit-target { color: #7cc4ff; }
+.user-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; align-items: center; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elevated); }
+.user-row.is-disabled { opacity: .7; }
+.user-actions { grid-column: 1 / -1; display: grid; gap: 6px; }
+.field-hint { font-size: 12.5px; }
+.search-form-filters { grid-template-columns: 1fr 160px 160px auto; }
+@media (max-width: 640px) { .search-form-filters { grid-template-columns: 1fr 1fr; } .search-form-filters .input { grid-column: 1 / -1; } }
+.user-row .draft-main .faint { white-space: normal; }
+
 /* ---------- Footer ---------- */
 .footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 28px 0; color: var(--text-faint); font-size: 14px; }
 .footer-inner { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }

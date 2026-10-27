@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Poster } from "@/components/Poster";
+import { ActionForm } from "@/components/ActionForm";
 import { SubmitButton } from "@/components/SubmitButton";
 import type { Movie } from "@/lib/movies/types";
 import type { Mood } from "@/lib/recommend/moods";
@@ -25,7 +26,7 @@ export function NewDraftForm({ kind, movies, templates, moods, initialLanguage }
   const options = templates.filter((t) => t.kind === kind && t.language === language);
 
   return (
-    <form action={action}>
+    <ActionForm action={action}>
       <input type="hidden" name="kind" value={kind} />
       <div className="new-options">
         <div className="field">
@@ -93,6 +94,6 @@ export function NewDraftForm({ kind, movies, templates, moods, initialLanguage }
         </SubmitButton>
         <FormMessage state={state} />
       </div>
-    </form>
+    </ActionForm>
   );
 }
