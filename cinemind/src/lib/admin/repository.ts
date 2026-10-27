@@ -9,6 +9,7 @@ export type AdminUser = {
   role: "user" | "admin";
   createdAt: string;
   disabledAt: string | null;
+  emailVerifiedAt: string | null;
   lastSeenAt: string | null;
   ratings: number;
   watchlist: number;
@@ -17,14 +18,18 @@ export type AdminUser = {
 export async function listUsers(filter: { q?: string; role?: string; status?: string } = {}) {
   const like = filter.q ? `%${filter.q.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
   const { rows } = await query<AdminUser>(
-    `SELECT u.id, u.email, u.name, u.role, u.created_at AS "createdAt", u.disabled_at AS "disabledAt",
+    `SELECT u.id, u.email, u.name, u.role, u.created_at AS "createdAt", u.disabled_at AS "disabledAt", u.email_verified_at AS "emailVerifiedAt",
             (SELECT max(created_at) FROM sessions s WHERE s.user_id = u.id) AS "lastSeenAt",
             (SELECT count(*)::int FROM user_ratings r WHERE r.user_id = u.id) AS ratings,
             (SELECT count(*)::int FROM watchlist_items w WHERE w.user_id = u.id) AS watchlist
        FROM users u
       WHERE ($1::text IS NULL OR u.email ILIKE $1 OR u.name ILIKE $1)
         AND ($2::text IS NULL OR u.role = $2)
-        AND (CASE $3::text WHEN 'disabled' THEN u.disabled_at IS NOT NULL WHEN 'active' THEN u.disabled_at IS NULL ELSE true END)
+        AND (CASE $3::text
+               WHEN 'disabled' THEN u.disabled_at IS NOT NULL
+               WHEN 'active' THEN u.disabled_at IS NULL
+               WHEN 'unverified' THEN u.email_verified_at IS NULL
+               ELSE true END)
       ORDER BY u.created_at DESC
       LIMIT 200`,
     [like, filter.role || null, filter.status || null],
@@ -34,7 +39,7 @@ export async function listUsers(filter: { q?: string; role?: string; status?: st
 
 export async function dashboardStats() {
   const { rows } = await query<{
-    users: number; users_7d: number; admins: number; disabled: number;
+    users: number; users_7d: number; admins: number; disabled: number; unverified: number;
     movies: number; movies_tmdb: number; movies_manual: number; movies_locked: number;
     ratings: number; watchlist: number;
     drafts: number; drafts_ready: number; facts_pending: number;
@@ -45,6 +50,7 @@ export async function dashboardStats() {
        (SELECT count(*)::int FROM users WHERE created_at > now() - interval '7 days') AS users_7d,
        (SELECT count(*)::int FROM users WHERE role = 'admin') AS admins,
        (SELECT count(*)::int FROM users WHERE disabled_at IS NOT NULL) AS disabled,
+       (SELECT count(*)::int FROM users WHERE email_verified_at IS NULL AND disabled_at IS NULL) AS unverified,
        (SELECT count(*)::int FROM movies) AS movies,
        (SELECT count(*)::int FROM movies WHERE source = 'tmdb') AS movies_tmdb,
        (SELECT count(*)::int FROM movies WHERE source = 'manual') AS movies_manual,

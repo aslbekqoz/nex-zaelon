@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { SubmitButton } from "@/components/SubmitButton";
 import { FormMessage } from "@/components/studio/FormMessage";
-import { createResetLink, setUserDisabled, setUserRole, signOutEverywhere } from "@/lib/admin/actions";
+import { createResetLink, markEmailVerified, setUserDisabled, setUserRole, signOutEverywhere } from "@/lib/admin/actions";
 import type { AdminUser } from "@/lib/admin/repository";
 
 export function UserActions({ user, isSelf }: { user: AdminUser; isSelf: boolean }) {
@@ -11,7 +11,8 @@ export function UserActions({ user, isSelf }: { user: AdminUser; isSelf: boolean
   const [statusState, statusAction] = useActionState(setUserDisabled, {});
   const [sessionState, sessionAction] = useActionState(signOutEverywhere, {});
   const [resetState, resetAction] = useActionState(createResetLink, {});
-  const message = [roleState, statusState, sessionState, resetState].find((s) => s.error || s.ok) ?? {};
+  const [verifyState, verifyAction] = useActionState(markEmailVerified, {});
+  const message = [roleState, statusState, sessionState, resetState, verifyState].find((s) => s.error || s.ok) ?? {};
 
   return (
     <div className="user-actions">
@@ -45,6 +46,14 @@ export function UserActions({ user, isSelf }: { user: AdminUser; isSelf: boolean
             Sign out everywhere
           </SubmitButton>
         </form>
+        {!user.emailVerifiedAt ? (
+          <form action={verifyAction}>
+            <input type="hidden" name="id" value={user.id} />
+            <SubmitButton className="btn btn-sm btn-ghost" pendingText="…">
+              Mark email verified
+            </SubmitButton>
+          </form>
+        ) : null}
         {!user.disabledAt ? (
           <form action={resetAction}>
             <input type="hidden" name="id" value={user.id} />

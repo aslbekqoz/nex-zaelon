@@ -7,9 +7,10 @@ import { audit } from "@/lib/audit";
 import { query } from "@/lib/db";
 import { appUrl, sendEmail } from "@/lib/email/send";
 import { passwordResetEmail } from "@/lib/email/templates";
-import { clientIp, loginBlocked, recordAttempt, registerBlocked, resetBlocked } from "./attempts";
+import { clientIp, loginBlocked, recordAttempt, registerBlocked, resetBlocked, verifyResendBlocked } from "./attempts";
 import { passwordError } from "./password";
 import { completeReset, createResetToken } from "./reset";
+import { sendVerificationEmail } from "./verify";
 import { createSession, destroySession, getCurrentUser, safeNextPath } from "./session";
 
 export type AuthState = { error?: string; ok?: string; email?: string; name?: string };
@@ -48,6 +49,7 @@ export async function register(_prev: AuthState, form: FormData): Promise<AuthSt
   if (!rows[0]) return { error: "An account with this email already exists.", email, name };
 
   await createSession(rows[0].id);
+  await sendVerificationEmail({ id: rows[0].id, name, email });
   // New accounts start with taste onboarding unless they were heading somewhere specific
   redirect(next === "/" ? "/onboarding" : next);
 }
@@ -133,4 +135,19 @@ export async function resetPassword(_prev: AuthState, form: FormData): Promise<A
   await audit(result.userId, "auth.password_reset", { type: "user", id: result.userId });
   await createSession(result.userId);
   redirect("/?password=reset");
+}
+
+// ---------- Email verification ----------
+
+export async function resendVerification(_prev: AuthState): Promise<AuthState> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Please sign in first." };
+  if (user.emailVerified) return { ok: "Your email is already confirmed." };
+  const blocked = await verifyResendBlocked(user.email);
+  if (blocked) return { error: blocked };
+  await recordAttempt("verify", user.email, await clientIp(), true);
+  const sent = await sendVerificationEmail(user);
+  if (!sent) return { error: "Email isn't set up on this site yet. Please contact the administrator." };
+  await audit(user.id, "auth.verify_resent", { type: "user", id: user.id });
+  return { ok: `We've sent a new confirmation link to ${user.email}. It expires in 48 hours.` };
 }

@@ -30,3 +30,29 @@ export function passwordResetEmail(input: { name: string; link: string; minutes:
 </body></html>`;
   return { subject, text, html };
 }
+
+export function verifyEmailMessage(input: { name: string; link: string; hours: number; brand?: string }) {
+  const brand = input.brand ?? "CineMind AI";
+  const subject = `Confirm your email for ${brand}`;
+  const text = [
+    `Hi ${input.name},`,
+    "",
+    `Welcome to ${brand}! Please confirm that this is your email address by opening this link:`,
+    "",
+    input.link,
+    "",
+    `The link works once and expires in ${input.hours} hours.`,
+    `If you didn't create a ${brand} account, you can ignore this email.`,
+    "",
+    `— ${brand}`,
+  ].join("\n");
+  const html = `<!doctype html><html><body style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.5;color:#111">
+<p>Hi ${escapeHtml(input.name)},</p>
+<p>Welcome to ${escapeHtml(brand)}! Please confirm that this is your email address.</p>
+<p><a href="${escapeHtml(input.link)}" style="display:inline-block;background:#f5b301;color:#1a1300;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">Confirm my email</a></p>
+<p style="font-size:14px;color:#555">Or copy this link: ${escapeHtml(input.link)}</p>
+<p style="font-size:14px;color:#555">The link works once and expires in ${input.hours} hours. If you didn't create a ${escapeHtml(brand)} account, you can ignore this email.</p>
+<p>— ${escapeHtml(brand)}</p>
+</body></html>`;
+  return { subject, text, html };
+}

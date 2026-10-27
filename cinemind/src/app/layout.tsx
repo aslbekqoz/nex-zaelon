@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Header } from "@/components/Header";
+import { VerifyBanner } from "@/components/VerifyBanner";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <Header />
+        <VerifyBanner />
         <main>{children}</main>
         <footer className="footer">
           <div className="container footer-inner">

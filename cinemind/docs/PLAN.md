@@ -117,8 +117,16 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] Email over SMTP (`SMTP_URL`, `MAIL_FROM`); links built from `APP_URL`, never from the Host header; development prints emails to the console
 - [x] Rate limits: 3 requests per email per hour, 10 per IP behind a trusted proxy; every step in the audit log
 
+### Follow-up: email confirmation ✅
+- [x] Migration 007: `users.email_verified_at`, `email_verifications` (hashed one-time tokens tied to the address they were sent to); `auth_attempts` gains the `verify` kind
+- [x] Confirmation email on sign-up (link valid 48 hours); banner with **Resend email** (3 per hour) until confirmed
+- [x] `/verify-email` works without signing in; reopening a used link says it's already confirmed; replaced, expired, malformed and changed-address links are rejected
+- [x] Completing a password reset confirms the address
+- [x] Admin: "Email unverified" badge and filter, **Mark email verified**, count on the overview; every step in the audit log
+- [x] Soft by design: unconfirmed users can still use the site (a stricter mode can block sign-in or certain features later)
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).
-- There is no email address verification yet (the email module from password reset can be reused for it).
+- Email confirmation doesn't block anything yet, and users can't change their email address themselves.
 - Roles are `user` and `admin`; every admin can use the Content Studio. A separate `editor` role can be added later without schema changes beyond the role check.

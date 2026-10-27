@@ -108,6 +108,19 @@ export async function createResetLink(_prev: FormState, form: FormData): Promise
   };
 }
 
+/** For users who can't receive the confirmation email (e.g. confirmed by phone). */
+export async function markEmailVerified(_prev: FormState, form: FormData): Promise<FormState> {
+  const admin = await requireAdmin();
+  const userId = targetId(form);
+  const { rowCount } = await query(
+    "UPDATE users SET email_verified_at = now() WHERE id = $1 AND email_verified_at IS NULL",
+    [userId],
+  );
+  if (rowCount) await audit(admin.id, "user.email_verified_by_admin", { type: "user", id: userId });
+  revalidatePath("/admin/users");
+  return { ok: rowCount ? "Email marked as confirmed." : "This email was already confirmed." };
+}
+
 // ---------- Movies ----------
 
 function fieldsOf(form: FormData) {

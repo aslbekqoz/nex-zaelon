@@ -409,6 +409,15 @@ a.stat-card:hover { border-color: var(--accent); }
 }
 .import-panel .tool-row .select { flex: 0 1 220px; }
 
+/* ---------- Email verification ---------- */
+.verify-banner { background: rgb(245 179 1 / 0.1); border-bottom: 1px solid rgb(245 179 1 / 0.3); font-size: 14.5px; }
+.verify-inner { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }
+.verify-inner strong { overflow-wrap: anywhere; }
+.verify-form { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.verify-msg { font-size: 14px; }
+.verify-msg.ok { color: var(--success); }
+.verify-msg.err { color: var(--danger); }
+
 /* ---------- Footer ---------- */
 .footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 28px 0; color: var(--text-faint); font-size: 14px; }
 .footer-inner { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }

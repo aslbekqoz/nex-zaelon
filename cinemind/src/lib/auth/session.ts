@@ -13,6 +13,7 @@ export type User = {
   email: string;
   name: string;
   role: "user" | "admin";
+  emailVerified: boolean;
 };
 
 function hashToken(token: string) {
@@ -53,7 +54,7 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
   const token = (await cookies()).get(COOKIE_NAME)?.value;
   if (!token) return null;
   const { rows } = await query<User>(
-    `SELECT u.id, u.email, u.name, u.role
+    `SELECT u.id, u.email, u.name, u.role, u.email_verified_at IS NOT NULL AS "emailVerified"
        FROM sessions s JOIN users u ON u.id = s.user_id
       WHERE s.token_hash = $1 AND s.expires_at > now() AND u.disabled_at IS NULL`,
     [hashToken(token)],
