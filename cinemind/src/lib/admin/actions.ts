@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { audit } from "@/lib/audit";
 import { createResetToken } from "@/lib/auth/reset";
+import { isRole, ROLE_LABELS, type Role } from "@/lib/auth/roles";
 import { requireAdmin } from "@/lib/auth/session";
 import { appUrl } from "@/lib/email/send";
 import { db, query } from "@/lib/db";
@@ -45,19 +46,27 @@ export async function setUserRole(_prev: FormState, form: FormData): Promise<For
   const admin = await requireAdmin();
   const userId = targetId(form);
   const role = form.get("role");
-  if (role !== "admin" && role !== "user") return { error: "Invalid role." };
+  if (!isRole(role)) return { error: "Invalid role." };
   if (userId === admin.id) return { error: "You can't change your own role." };
-  const changed = await withAdminLock((c) =>
-    c.query(
-      `UPDATE users SET role = $2
-        WHERE id = $1 AND ($2 = 'admin' OR (SELECT count(*) FROM users WHERE role = 'admin' AND disabled_at IS NULL) > 1)`,
-      [userId, role],
-    ),
-  );
-  if (!changed.rowCount) return { error: "There must always be at least one active admin." };
-  await audit(admin.id, role === "admin" ? "user.promote" : "user.demote", { type: "user", id: userId });
+  const result = await withAdminLock(async (c) => {
+    const { rows } = await c.query<{ role: Role }>("SELECT role FROM users WHERE id = $1 FOR UPDATE", [userId]);
+    const from = rows[0]?.role;
+    if (!from) return { error: "User not found." } as const;
+    if (from === role) return { error: "They already have that role." } as const;
+    if (from === "admin") {
+      const others = await c.query<{ n: number }>(
+        "SELECT count(*)::int AS n FROM users WHERE role = 'admin' AND disabled_at IS NULL AND id <> $1",
+        [userId],
+      );
+      if (!others.rows[0].n) return { error: "There must always be at least one active admin." } as const;
+    }
+    await c.query("UPDATE users SET role = $2 WHERE id = $1", [userId, role]);
+    return { from } as const;
+  });
+  if ("error" in result) return { error: result.error };
+  await audit(admin.id, "user.role_changed", { type: "user", id: userId }, { from: result.from, to: role });
   revalidatePath("/admin/users");
-  return { ok: role === "admin" ? "User is now an admin." : "Admin rights removed." };
+  return { ok: `Role changed to ${ROLE_LABELS[role].toLowerCase()}.` };
 }
 
 export async function setUserDisabled(_prev: FormState, form: FormData): Promise<FormState> {

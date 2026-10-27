@@ -33,7 +33,7 @@ Search then imports matching movies from TMDB into the catalogue. The first time
 
 ### Admin and Content Studio
 
-Sign up on the site, then give your account editor (admin) rights:
+Sign up on the site, then give your account admin rights:
 
 ```bash
 npm run admin:create -- you@example.com
@@ -43,7 +43,9 @@ A **Studio** link then appears in the header (`/studio`). Create drafts from tem
 
 Optional: set `ANTHROPIC_API_KEY` in `.env` to enable **Write synopsis with AI** for movie cards and descriptions.
 
-The **Admin** link (`/admin`) opens the admin panel: an overview, user management (admin rights, disabling accounts, signing users out), adding and editing movies by hand (including Uzbek titles and synopses), and the audit log of admin and studio actions.
+Roles: **users** browse, rate and save movies; **editors** also use the Content Studio; **admins** use the Studio and the admin panel. Admins change roles under **Admin → Users**, or on the server with `npm run user:role -- email editor` (`user`, `editor` or `admin`). There is always at least one active admin.
+
+The **Admin** link (`/admin`) opens the admin panel: an overview, user management (roles, disabling accounts, signing users out), adding and editing movies by hand (including Uzbek titles and synopses), and the audit log of admin and studio actions.
 
 ### Email: confirmation and password reset
 
@@ -91,10 +93,11 @@ With `APP_URL` set, the site serves `/robots.txt` and `/sitemap.xml` (every movi
 | `npm run dev` | Development server |
 | `npm run build` / `npm start` | Production build and server |
 | `npm run typecheck` | TypeScript check |
-| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, email confirmation and change, profile pictures, account deletion, data export, device names, structured data, movie form, credits, filters, images) |
+| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, email confirmation and change, profile pictures, account deletion, data export, device names, structured data, roles, movie form, credits, filters, images) |
 | `npm run db:migrate` | Apply new migrations |
 | `npm run db:seed` | Load genres and starter movies (safe to re-run) |
 | `npm run admin:create -- email` | Give a user admin rights (and confirm their email) |
+| `npm run user:role -- email role` | Set a user's role: `user`, `editor` or `admin` |
 | `npm run user:verify -- email` | Confirm a user's email address |
 
 ## Structure

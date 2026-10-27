@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { canUseAdmin, canUseStudio } from "@/lib/auth/roles";
 import { getCurrentUser } from "@/lib/auth/session";
 import { logout } from "@/lib/auth/actions";
 import { UserAvatar } from "./UserAvatar";
@@ -21,12 +22,8 @@ export async function Header() {
           <Link href="/search">Movies</Link>
           <Link href="/recommendations">For you</Link>
           <Link href="/watchlist">My watchlist</Link>
-          {user?.role === "admin" ? (
-            <>
-              <Link href="/studio">Studio</Link>
-              <Link href="/admin">Admin</Link>
-            </>
-          ) : null}
+          {user && canUseStudio(user.role) ? <Link href="/studio">Studio</Link> : null}
+          {user && canUseAdmin(user.role) ? <Link href="/admin">Admin</Link> : null}
         </nav>
         <form action="/search" className="header-search" role="search">
           <label className="sr-only" htmlFor="header-q">

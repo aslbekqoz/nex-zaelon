@@ -5,6 +5,7 @@ import { cookies, headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { query } from "@/lib/db";
 import { MAX_USER_AGENT } from "./device";
+import { canUseAdmin, canUseStudio, type Role } from "./roles";
 import { mustConfirmEmail, verificationMode } from "./verification";
 
 const COOKIE_NAME = "cm_session";
@@ -16,7 +17,7 @@ export type User = {
   id: number;
   email: string;
   name: string;
-  role: "user" | "admin";
+  role: Role;
   emailVerified: boolean;
   /** Key of the profile picture (/avatars/<key>), or null when there is none. */
   avatarKey: string | null;
@@ -133,19 +134,19 @@ export async function requireVerifiedUser(nextPath = "/"): Promise<User> {
   return user;
 }
 
-/** Editors only; everyone else gets a 404 so the studio isn't advertised. Today every admin is an editor. */
+/** Content Studio access (editors and admins); everyone else gets a 404 so the studio isn't advertised. */
 export async function requireEditor(nextPath = "/studio"): Promise<User> {
   const user = await requireUser(nextPath);
-  // Role first, so non-editors get a 404 whether or not their email is confirmed
-  if (user.role !== "admin") notFound();
+  // Role first, so others get a 404 whether or not their email is confirmed
+  if (!canUseStudio(user.role)) notFound();
   if (needsEmailConfirmation(user)) redirect(`/confirm-email?next=${encodeURIComponent(nextPath)}`);
   return user;
 }
 
-/** Admin panel access; same rule as the studio for now, kept separate so roles can diverge later. */
+/** Admin panel access: admins only. */
 export async function requireAdmin(nextPath = "/admin"): Promise<User> {
   const user = await requireUser(nextPath);
-  if (user.role !== "admin") notFound();
+  if (!canUseAdmin(user.role)) notFound();
   if (needsEmailConfirmation(user)) redirect(`/confirm-email?next=${encodeURIComponent(nextPath)}`);
   return user;
 }

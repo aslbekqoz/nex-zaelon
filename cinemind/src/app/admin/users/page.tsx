@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { UserActions } from "@/components/admin/UserActions";
 import { UserAvatar } from "@/components/UserAvatar";
 import { listUsers } from "@/lib/admin/repository";
+import { isRole, ROLE_LABELS } from "@/lib/auth/roles";
 import { requireAdmin } from "@/lib/auth/session";
 import { when } from "../describe";
 
@@ -13,7 +14,7 @@ export default async function UsersPage({ searchParams }: Props) {
   const me = await requireAdmin("/admin/users");
   const sp = await searchParams;
   const q = sp.q?.trim().slice(0, 100) || undefined;
-  const role = sp.role === "admin" || sp.role === "user" ? sp.role : undefined;
+  const role = isRole(sp.role) ? sp.role : undefined;
   const status = sp.status === "active" || sp.status === "disabled" || sp.status === "unverified" ? sp.status : undefined;
   // "#123" finds a user by id (used by links from the audit log)
   const byId = q?.match(/^#(\d+)$/)?.[1];
@@ -29,6 +30,7 @@ export default async function UsersPage({ searchParams }: Props) {
         <select name="role" className="select" defaultValue={role ?? ""} aria-label="Role">
           <option value="">All roles</option>
           <option value="admin">Admins</option>
+          <option value="editor">Editors</option>
           <option value="user">Users</option>
         </select>
         <select name="status" className="select" defaultValue={status ?? ""} aria-label="Status">
@@ -58,7 +60,7 @@ export default async function UsersPage({ searchParams }: Props) {
               </span>
             </div>
             <div className="draft-meta">
-              {u.role === "admin" ? <span className="badge status-ready">Admin</span> : <span className="badge">User</span>}
+              <span className={`badge${u.role === "user" ? "" : " status-ready"}`}>{ROLE_LABELS[u.role]}</span>
               {u.disabledAt ? <span className="badge status-rejected">Disabled</span> : null}
               {!u.emailVerifiedAt ? <span className="badge status-unverified">Email unverified</span> : null}
             </div>

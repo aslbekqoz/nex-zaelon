@@ -1,4 +1,5 @@
 import "server-only";
+import type { Role } from "@/lib/auth/roles";
 import { query } from "@/lib/db";
 import type { Genre } from "@/lib/movies/types";
 
@@ -6,7 +7,7 @@ export type AdminUser = {
   id: number;
   email: string;
   name: string;
-  role: "user" | "admin";
+  role: Role;
   createdAt: string;
   disabledAt: string | null;
   emailVerifiedAt: string | null;
@@ -41,7 +42,7 @@ export async function listUsers(filter: { q?: string; role?: string; status?: st
 
 export async function dashboardStats() {
   const { rows } = await query<{
-    users: number; users_7d: number; admins: number; disabled: number; unverified: number;
+    users: number; users_7d: number; admins: number; editors: number; disabled: number; unverified: number;
     movies: number; movies_tmdb: number; movies_manual: number; movies_locked: number;
     ratings: number; watchlist: number;
     drafts: number; drafts_ready: number; facts_pending: number;
@@ -51,6 +52,7 @@ export async function dashboardStats() {
        (SELECT count(*)::int FROM users) AS users,
        (SELECT count(*)::int FROM users WHERE created_at > now() - interval '7 days') AS users_7d,
        (SELECT count(*)::int FROM users WHERE role = 'admin') AS admins,
+       (SELECT count(*)::int FROM users WHERE role = 'editor') AS editors,
        (SELECT count(*)::int FROM users WHERE disabled_at IS NOT NULL) AS disabled,
        (SELECT count(*)::int FROM users WHERE email_verified_at IS NULL AND disabled_at IS NULL) AS unverified,
        (SELECT count(*)::int FROM movies) AS movies,
