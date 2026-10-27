@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { normalizeReview, reviewError } from "./rules.ts";
+import { normalizeReview, reviewError, reviewExcerpt } from "./rules.ts";
 
 test("reviews are tidied without losing paragraphs", () => {
   assert.equal(normalizeReview("  First line.   \r\n\r\n\r\n\r\nSecond\tparagraph.\t \n"), "First line.\n\nSecond\tparagraph.");
@@ -17,4 +17,11 @@ test("length and character rules", () => {
   assert.match(reviewError("Great film, really great‮evil") ?? "", /invisible/);
   assert.match(reviewError("Great film, really great\u0007!") ?? "", /invisible/);
   assert.match(reviewError("Great film, really great​!") ?? "", /invisible/);
+});
+
+test("excerpts are one line and cut between words", () => {
+  assert.equal(reviewExcerpt("Short\n\nand sweet."), "Short and sweet.");
+  assert.equal(reviewExcerpt("one two three four five", 12), "one two…");
+  assert.equal(reviewExcerpt("abcdefghijklmnop qr", 10), "abcdefghij…", "no space in the second half: hard cut");
+  assert.equal(reviewExcerpt("🎬🎬🎬🎬", 2), "🎬🎬…", "never splits an emoji");
 });

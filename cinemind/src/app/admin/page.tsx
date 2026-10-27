@@ -11,6 +11,7 @@ export default async function AdminHome() {
     { label: "Users", value: s.users, sub: `${s.users_7d} new this week · ${s.admins} admin${s.admins === 1 ? "" : "s"} · ${s.editors} editor${s.editors === 1 ? "" : "s"}`, href: "/admin/users" },
     { label: "Movies", value: s.movies, sub: `${s.movies_tmdb} from TMDB · ${s.movies_manual} added by hand`, href: "/admin/movies" },
     { label: "Ratings", value: s.ratings, sub: `${s.watchlist} watchlist saves` },
+    { label: "Reviews", value: s.reviews, sub: `${s.reviews_7d} this week · ${s.reviews_hidden} hidden`, href: "/admin/reviews" },
     { label: "Studio drafts", value: s.drafts, sub: `${s.drafts_ready} ready to use`, href: "/studio" },
   ];
   const attention: { text: string; href: string }[] = [];

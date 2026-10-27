@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Backdrop } from "@/components/Backdrop";
 import { GenreChips } from "@/components/GenreChips";
 import { MovieRow } from "@/components/MovieCard";
+import { LatestReviews } from "@/components/ReviewList";
+import { listLatestReviews } from "@/lib/reviews/repository";
 import { getCurrentUser } from "@/lib/auth/session";
 import { listGenres, listMovies } from "@/lib/movies/repository";
 import { displayTitle } from "@/lib/movies/types";
@@ -10,7 +12,7 @@ import { getRecommendations } from "@/lib/recommend/service";
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ password?: string }> }) {
   const passwordReset = (await searchParams).password === "reset";
   const user = await getCurrentUser();
-  const [popular, topRated, scifi, drama, animation, genres, forYou] = await Promise.all([
+  const [popular, topRated, scifi, drama, animation, genres, forYou, latestReviews] = await Promise.all([
     listMovies({ sort: "popular", limit: 16 }),
     listMovies({ sort: "rating", ratedOnly: true, limit: 16 }),
     listMovies({ genreSlug: "science-fiction", limit: 16 }),
@@ -18,6 +20,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     listMovies({ genreSlug: "animation", limit: 16 }),
     listGenres(),
     user ? getRecommendations({ userId: user.id, limit: 16 }) : null,
+    listLatestReviews(),
   ]);
   const personal = forYou?.personalised ? forYou.items : [];
 
@@ -88,6 +91,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       />
       <MovieRow title="Popular" movies={popular} href="/search?sort=popular" />
       <MovieRow title="Top rated" movies={topRated} href="/search?sort=rating" />
+      <LatestReviews reviews={latestReviews} />
       <MovieRow title="Science fiction" movies={scifi} href="/search?genre=science-fiction" />
       <MovieRow title="Drama" movies={drama} href="/search?genre=drama" />
       <MovieRow title="Animation" movies={animation} href="/search?genre=animation" />

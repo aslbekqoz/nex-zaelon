@@ -44,7 +44,7 @@ export async function dashboardStats() {
   const { rows } = await query<{
     users: number; users_7d: number; admins: number; editors: number; disabled: number; unverified: number;
     movies: number; movies_tmdb: number; movies_manual: number; movies_locked: number;
-    ratings: number; watchlist: number;
+    ratings: number; watchlist: number; reviews: number; reviews_7d: number; reviews_hidden: number;
     drafts: number; drafts_ready: number; facts_pending: number;
     failed_logins_24h: number;
   }>(
@@ -61,6 +61,9 @@ export async function dashboardStats() {
        (SELECT count(*)::int FROM movies WHERE sync_locked) AS movies_locked,
        (SELECT count(*)::int FROM user_ratings) AS ratings,
        (SELECT count(*)::int FROM watchlist_items) AS watchlist,
+       (SELECT count(*)::int FROM movie_reviews) AS reviews,
+       (SELECT count(*)::int FROM movie_reviews WHERE created_at > now() - interval '7 days') AS reviews_7d,
+       (SELECT count(*)::int FROM movie_reviews WHERE hidden_at IS NOT NULL) AS reviews_hidden,
        (SELECT count(*)::int FROM studio_drafts WHERE status <> 'archived') AS drafts,
        (SELECT count(*)::int FROM studio_drafts WHERE status = 'ready') AS drafts_ready,
        (SELECT count(*)::int FROM studio_facts WHERE status = 'unverified') AS facts_pending,
