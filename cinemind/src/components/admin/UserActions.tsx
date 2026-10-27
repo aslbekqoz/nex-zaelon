@@ -5,6 +5,7 @@ import { SubmitButton } from "@/components/SubmitButton";
 import { FormMessage } from "@/components/studio/FormMessage";
 import { createResetLink, markEmailVerified, setUserDisabled, setUserRole, signOutEverywhere } from "@/lib/admin/actions";
 import type { AdminUser } from "@/lib/admin/repository";
+import { ROLE_LABELS, ROLES } from "@/lib/auth/roles";
 
 export function UserActions({ user, isSelf }: { user: AdminUser; isSelf: boolean }) {
   const [roleState, roleAction] = useActionState(setUserRole, {});
@@ -18,11 +19,17 @@ export function UserActions({ user, isSelf }: { user: AdminUser; isSelf: boolean
     <div className="user-actions">
       <div className="tool-row">
         {!isSelf ? (
-          <form action={roleAction}>
+          <form action={roleAction} className="role-form">
             <input type="hidden" name="id" value={user.id} />
-            <input type="hidden" name="role" value={user.role === "admin" ? "user" : "admin"} />
+            <select name="role" className="select select-sm" defaultValue={user.role} aria-label={`Role for ${user.email}`} key={user.role}>
+              {ROLES.map((r) => (
+                <option key={r} value={r}>
+                  {ROLE_LABELS[r]}
+                </option>
+              ))}
+            </select>
             <SubmitButton className="btn btn-sm" pendingText="…">
-              {user.role === "admin" ? "Remove admin" : "Make admin"}
+              Change role
             </SubmitButton>
           </form>
         ) : null}

@@ -178,8 +178,13 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] Movie and person pages have canonical URLs, Open Graph and Twitter cards (poster / photo as the preview image) and schema.org JSON-LD (`Movie` with genres, runtime, director, cast, rating only when TMDB has one, trailer; `Person`)
 - [x] Everything absolute comes from `APP_URL` (`src/lib/site.ts`); without it there's no sitemap and no structured data rather than wrong URLs
 
+### Follow-up: editor role ✅
+- [x] Roles are `user`, `editor` and `admin` (migration 013); `src/lib/auth/roles.ts` decides who may use the Studio (editors and admins) and the admin panel (admins)
+- [x] Header links follow the role; others get a 404 for `/studio` or `/admin`
+- [x] **Admin → Users**: a role picker per user, an Editors filter, editor count on the dashboard; changes are audited as `user.role_changed` with from/to; the last active admin can't be demoted
+- [x] `npm run user:role -- email user|editor|admin` for the server, with the same last-admin rule
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).
 - An address taken by someone else's unconfirmed account can be reclaimed by its owner through "Forgot password".
-- Roles are `user` and `admin`; every admin can use the Content Studio. A separate `editor` role can be added later without schema changes beyond the role check.

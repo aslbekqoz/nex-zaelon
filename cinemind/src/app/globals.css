@@ -391,6 +391,8 @@ a.stat-card:hover { border-color: var(--accent); }
 .user-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; align-items: center; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elevated); }
 .user-row.is-disabled { opacity: .7; }
 .user-actions { grid-column: 1 / -1; display: grid; gap: 6px; }
+.role-form { display: flex; align-items: center; gap: 6px; }
+.select.select-sm { width: auto; flex: none; padding: 6px 10px; font-size: 14px; }
 .field-hint { font-size: 12.5px; }
 .search-form-filters { grid-template-columns: 1fr 160px 160px auto; }
 @media (max-width: 640px) { .search-form-filters { grid-template-columns: 1fr 1fr; } .search-form-filters .input { grid-column: 1 / -1; } }

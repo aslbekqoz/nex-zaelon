@@ -9,6 +9,7 @@ import { DeviceList } from "@/components/DeviceList";
 import { UserAvatar } from "@/components/UserAvatar";
 import { cancelPendingEmailChange } from "@/lib/auth/actions";
 import { getPendingChange } from "@/lib/auth/change-email";
+import { canUseStudio } from "@/lib/auth/roles";
 import { listSessions, needsEmailConfirmation, requireUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = { title: "Account", robots: { index: false } };
@@ -126,7 +127,7 @@ export default async function AccountPage() {
         <h2>Delete account</h2>
         <p className="muted" style={{ margin: "4px 0 0" }}>
           This permanently deletes your account, watchlist, ratings, preferences and profile picture, and signs you out everywhere.
-          It can&apos;t be undone.{user.role === "admin" ? " Content Studio drafts, templates and facts you made stay, without your name." : ""}
+          It can&apos;t be undone.{canUseStudio(user.role) ? " Content Studio drafts, templates and facts you made stay, without your name." : ""}
         </p>
         <DeleteAccountForm />
       </section>
