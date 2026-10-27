@@ -9,7 +9,7 @@ const source: ExportSource = {
   watchlist: [{ movieId: 7, title: "Arrival", titleUz: "Kelish", year: 2016, watched: true, addedAt: d("2026-02-01T00:00:00Z") }],
   ratings: [{ movieId: 9, title: "Heat", titleUz: null, year: null, rating: 9, ratedAt: d("2026-03-01T00:00:00Z") }],
   pendingEmailChange: null,
-  sessions: [{ createdAt: d("2026-04-01T00:00:00Z"), expiresAt: d("2026-05-01T00:00:00Z") }],
+  sessions: [{ userAgent: "Mozilla/5.0 (X11; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0", createdAt: d("2026-04-01T00:00:00Z"), lastSeenAt: d("2026-04-02T00:00:00Z"), expiresAt: d("2026-05-01T00:00:00Z") }],
   avatar: { contentType: "image/webp", updatedAt: d("2026-04-02T00:00:00Z"), image: new Uint8Array([1, 2, 3]) },
   activity: [
     { action: "auth.name_changed", createdAt: d("2026-04-03T00:00:00Z"), details: { from: "A", to: "Ada" } },
@@ -29,7 +29,10 @@ test("the export holds the user's data with ISO dates and absolute movie links",
   assert.equal(out.ratings[0].rating, 9);
   assert.equal(out.ratings[0].url, "https://cinemind.uz/movies/9");
   assert.equal(out.profilePicture?.dataBase64, "AQID");
-  assert.deepEqual(out.signedInSessions, [{ signedInAt: "2026-04-01T00:00:00.000Z", expiresAt: "2026-05-01T00:00:00.000Z" }]);
+  assert.deepEqual(out.signedInSessions, [{
+    device: "Firefox on Linux", userAgent: source.sessions[0].userAgent, signedInAt: "2026-04-01T00:00:00.000Z",
+    lastActiveAt: "2026-04-02T00:00:00.000Z", expiresAt: "2026-05-01T00:00:00.000Z",
+  }]);
   assert.deepEqual(out.activity[0].details, { from: "A", to: "Ada" });
   assert.ok(!("details" in out.activity[1]));
 });

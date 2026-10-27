@@ -5,10 +5,11 @@ import { ChangeEmailForm } from "@/components/ChangeEmailForm";
 import { ChangeNameForm } from "@/components/ChangeNameForm";
 import { ChangePasswordForm } from "@/components/ChangePasswordForm";
 import { DeleteAccountForm } from "@/components/DeleteAccountForm";
+import { DeviceList } from "@/components/DeviceList";
 import { UserAvatar } from "@/components/UserAvatar";
 import { cancelPendingEmailChange } from "@/lib/auth/actions";
 import { getPendingChange } from "@/lib/auth/change-email";
-import { needsEmailConfirmation, requireUser } from "@/lib/auth/session";
+import { listSessions, needsEmailConfirmation, requireUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = { title: "Account", robots: { index: false } };
 
@@ -19,7 +20,7 @@ function when(iso: string) {
 // Unconfirmed users can open this page too: it's how they fix a mistyped address
 export default async function AccountPage() {
   const user = await requireUser("/account");
-  const pending = await getPendingChange(user.id);
+  const [pending, sessions] = await Promise.all([getPendingChange(user.id), listSessions(user.id)]);
 
   return (
     <div className="container" style={{ maxWidth: 720 }}>
@@ -98,6 +99,14 @@ export default async function AccountPage() {
           <Link href="/forgot-password" className="link">Reset it</Link>.
         </p>
         <ChangePasswordForm />
+      </section>
+
+      <section className="card-panel">
+        <h2>Signed-in devices</h2>
+        <p className="muted" style={{ margin: "4px 0 12px" }}>
+          Don&apos;t recognise a device? Sign it out, then change your password.
+        </p>
+        <DeviceList sessions={sessions} now={Date.now()} />
       </section>
 
       <section className="card-panel">
