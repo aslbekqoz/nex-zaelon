@@ -492,3 +492,7 @@ a.stat-card:hover { border-color: var(--accent); }
 .mod-review { display: grid; gap: 4px; }
 .mod-review-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 14px; }
 .mod-review .review-body { margin: 6px 0 8px; }
+.review-teasers { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 14px; }
+.review-teaser { display: block; color: inherit; transition: border-color .15s; }
+.review-teaser:hover { border-color: #3a3f4b; }
+.review-teaser .review-body { white-space: normal; color: var(--text-muted); font-size: 14.5px; }

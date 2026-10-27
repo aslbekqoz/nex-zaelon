@@ -41,6 +41,21 @@ export async function listMovieReviews(movieId: number, limit = 30) {
   return { reviews: list.rows, total: count.rows[0].n };
 }
 
+export type LatestReview = Review & { movieTitle: string };
+
+/** Newest public reviews across the site for the home page; spoiler reviews are left out. */
+export async function listLatestReviews(limit = 6) {
+  const { rows } = await query<LatestReview>(
+    `SELECT x.*, m.title AS "movieTitle" FROM (${REVIEW_SELECT}
+        WHERE r.hidden_at IS NULL AND NOT r.spoilers AND u.disabled_at IS NULL
+        ORDER BY r.created_at DESC LIMIT $1) x
+       JOIN movies m ON m.id = x."movieId"
+      ORDER BY x."createdAt" DESC`,
+    [limit],
+  );
+  return rows;
+}
+
 /** The user's own review of a movie, hidden or not. */
 export async function getOwnReview(userId: number, movieId: number) {
   const { rows } = await query<Review>(`${REVIEW_SELECT} WHERE r.user_id = $1 AND r.movie_id = $2`, [userId, movieId]);

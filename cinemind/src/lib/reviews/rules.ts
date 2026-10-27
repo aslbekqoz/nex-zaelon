@@ -26,3 +26,12 @@ export function reviewError(text: string) {
   if (length > REVIEW_MAX) return `Keep it under ${REVIEW_MAX} characters (now ${length}).`;
   return null;
 }
+
+/** The start of a review on one line, cut at a word boundary, for teasers. */
+export function reviewExcerpt(text: string, max = 220) {
+  const chars = [...text.replace(/\s+/g, " ").trim()];
+  if (chars.length <= max) return chars.join("");
+  const cut = chars.slice(0, max).join("");
+  const space = cut.lastIndexOf(" ");
+  return `${space > max / 2 ? cut.slice(0, space) : cut}…`;
+}
