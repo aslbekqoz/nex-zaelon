@@ -1,6 +1,6 @@
 # 🎬 CineMind AI
 
-A professional movie platform: search, genre filters, movie detail pages with trailers, similar movies and a personal watchlist. Smart recommendations and the in-app **CineMind Content Studio** come in later stages.
+A professional movie platform: search, genre filters, movie detail pages with trailers, similar movies, a personal watchlist, ratings and smart recommendations (personal and mood-based) with an explanation for every pick. The in-app **CineMind Content Studio** comes in a later stage.
 
 Stages and architecture: [`docs/PLAN.md`](docs/PLAN.md).
 
@@ -46,6 +46,7 @@ npm run admin:create -- you@example.com
 | `npm run dev` | Development server |
 | `npm run build` / `npm start` | Production build and server |
 | `npm run typecheck` | TypeScript check |
+| `npm test` | Unit tests (recommendation engine) |
 | `npm run db:migrate` | Apply new migrations |
 | `npm run db:seed` | Load genres and starter movies (safe to re-run) |
 
@@ -54,9 +55,12 @@ npm run admin:create -- you@example.com
 ```
 db/migrations/        SQL migrations
 scripts/              migrate, seed, admin tools
-src/app/              pages (home, search, movie, sign in/up, watchlist)
+src/app/              pages (home, search, movie, for you, onboarding, sign in/up, watchlist)
 src/components/       UI components
 src/lib/auth/         sessions and authentication
 src/lib/movies/       catalogue, TMDB client, sync
 src/lib/watchlist/    personal watchlists
+src/lib/recommend/    recommendation engine and moods
+src/lib/ratings/      user ratings
+src/lib/preferences/  favourite genres and onboarding
 ```

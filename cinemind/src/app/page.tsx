@@ -1,18 +1,23 @@
 import Link from "next/link";
 import { GenreChips } from "@/components/GenreChips";
 import { MovieRow } from "@/components/MovieCard";
+import { getCurrentUser } from "@/lib/auth/session";
 import { listGenres, listMovies } from "@/lib/movies/repository";
 import { displayTitle } from "@/lib/movies/types";
+import { getRecommendations } from "@/lib/recommend/service";
 
 export default async function HomePage() {
-  const [popular, topRated, scifi, drama, animation, genres] = await Promise.all([
+  const user = await getCurrentUser();
+  const [popular, topRated, scifi, drama, animation, genres, forYou] = await Promise.all([
     listMovies({ sort: "popular", limit: 16 }),
     listMovies({ sort: "rating", ratedOnly: true, limit: 16 }),
     listMovies({ genreSlug: "science-fiction", limit: 16 }),
     listMovies({ genreSlug: "drama", limit: 16 }),
     listMovies({ genreSlug: "animation", limit: 16 }),
     listGenres(),
+    user ? getRecommendations({ userId: user.id, limit: 16 }) : null,
   ]);
+  const personal = forYou?.personalised ? forYou.items : [];
 
   const featured = popular.find((m) => m.backdropUrl) ?? popular[0];
 
@@ -70,6 +75,12 @@ export default async function HomePage() {
         </section>
       ) : null}
 
+      <MovieRow
+        title="Recommended for you"
+        movies={personal.map((i) => i.movie)}
+        notes={new Map(personal.map((i) => [i.movie.id, i.reasons.slice(0, 1)]))}
+        href="/recommendations"
+      />
       <MovieRow title="Popular" movies={popular} href="/search?sort=popular" />
       <MovieRow title="Top rated" movies={topRated} href="/search?sort=rating" />
       <MovieRow title="Science fiction" movies={scifi} href="/search?genre=science-fiction" />

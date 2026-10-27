@@ -34,7 +34,8 @@ export async function register(_prev: AuthState, form: FormData): Promise<AuthSt
   if (!rows[0]) return { error: "An account with this email already exists.", email, name };
 
   await createSession(rows[0].id);
-  redirect(next);
+  // New accounts start with taste onboarding unless they were heading somewhere specific
+  redirect(next === "/" ? "/onboarding" : next);
 }
 
 export async function login(_prev: AuthState, form: FormData): Promise<AuthState> {

@@ -34,7 +34,9 @@ src/lib/
   auth/              sessions, sign in / sign up
   movies/            catalogue repository, TMDB client, sync
   watchlist/         personal watchlists
-  (later) recommend/ recommendation algorithms
+  recommend/         recommendation engine, moods, candidate loading
+  ratings/           user ratings
+  preferences/       favourite genres, onboarding
   (later) studio/    Content Studio: templates, drafts, formatters
 ```
 
@@ -64,12 +66,16 @@ If publishing to a platform (e.g. Telegram) is ever needed, a new `src/lib/integ
 - Admin editing of Uzbek titles and synopses
 - Image optimisation (`next/image`, TMDB sizes)
 
-### Stage 3: recommendation system
-- Onboarding: pick favourite genres and movies
-- `user_ratings` table: rate movies 1–10
-- Content-based scoring: genre vector, director, year, rating, popularity; watchlist and ratings update the user profile
-- Mood-based recommendations: map moods to genre and feature weights ("I want to laugh" → comedy, animation…)
-- "Why this was recommended" explanations and a personal row on the home page
+### Stage 3: recommendation system ✅
+- [x] Onboarding after sign-up: pick favourite genres and liked movies (liked picks are saved as 8/10 and the UI says so); editable later
+- [x] `user_ratings` table and a 1–10 rating widget on movie pages
+- [x] Content-based engine (`src/lib/recommend/engine.ts`, pure and unit tested): the taste profile combines favourite genres, ratings (signed: 10 → +1, 1 → −1) and watchlist; candidates are scored on genre match, director affinity, era, rating quality (vote-count weighted) and popularity percentile, then re-ranked so one director doesn't dominate
+- [x] Mood-based recommendations (9 moods → genre weights, plus a runtime limit for "Short on time"); work signed out too, and blend with your taste when signed in
+- [x] "Why this was recommended" notes on every pick (director you rated, genres you like, mood fit, high rating)
+- [x] "For you" page and a "Recommended for you" row on the home page
+- [x] Cold start: popular and well-rated picks with a prompt to set your taste
+
+Scaling note: the engine scores the 3,000 most popular movies in memory per request, which is fast at the current catalogue size. A much larger catalogue would pre-filter candidates by genre in SQL and cache profiles.
 
 ### Stage 4: CineMind Content Studio
 - Tables: `studio_templates`, `studio_drafts`, `studio_facts` (source URL, verification status: unverified / verified / rejected), `brand_settings`

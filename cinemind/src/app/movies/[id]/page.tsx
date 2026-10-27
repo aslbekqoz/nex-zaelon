@@ -3,10 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MovieRow } from "@/components/MovieCard";
 import { Poster } from "@/components/Poster";
+import { RatingWidget } from "@/components/RatingWidget";
 import { SubmitButton } from "@/components/SubmitButton";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getMovie, getSimilarMovies } from "@/lib/movies/repository";
 import { ensureDetails } from "@/lib/movies/sync";
+import { getUserRating } from "@/lib/ratings/repository";
 import { displayTitle } from "@/lib/movies/types";
 import { setWatched, toggleWatchlist } from "@/lib/watchlist/actions";
 import { getWatchlistStatus } from "@/lib/watchlist/repository";
@@ -41,7 +43,9 @@ export default async function MoviePage({ params }: Props) {
   await ensureDetails(id);
   const [movie, similar, user] = await Promise.all([getMovie(id), getSimilarMovies(id), getCurrentUser()]);
   if (!movie) notFound();
-  const status = user ? await getWatchlistStatus(user.id, movie.id) : { saved: false, watched: false };
+  const [status, userRating] = user
+    ? await Promise.all([getWatchlistStatus(user.id, movie.id), getUserRating(user.id, movie.id)])
+    : [{ saved: false, watched: false }, null];
 
   const title = displayTitle(movie);
   const overview = movie.overview;
@@ -139,6 +143,7 @@ export default async function MoviePage({ params }: Props) {
                 </Link>
               )}
             </div>
+            {user ? <RatingWidget movieId={movie.id} rating={userRating} /> : null}
           </div>
         </div>
       </section>

@@ -18,6 +18,7 @@ export async function Header() {
         <nav className="nav" aria-label="Main menu">
           <Link href="/">Home</Link>
           <Link href="/search">Movies</Link>
+          <Link href="/recommendations">For you</Link>
           <Link href="/watchlist">My watchlist</Link>
         </nav>
         <form action="/search" className="header-search" role="search">
