@@ -5,7 +5,7 @@ import { audit } from "@/lib/audit";
 import { clientIp, recordAttempt, reviewBlocked } from "@/lib/auth/attempts";
 import { getCurrentUser, needsEmailConfirmation, requireAdmin } from "@/lib/auth/session";
 import { query } from "@/lib/db";
-import { deleteReview, setReviewHidden, upsertReview } from "./repository";
+import { deleteReview, setHelpfulVote, setReviewHidden, upsertReview } from "./repository";
 import { normalizeReview, reviewError } from "./rules";
 
 export type ReviewState = { error?: string; ok?: string; body?: string };
@@ -46,6 +46,17 @@ export async function removeOwnReview(_prev: ReviewState, form: FormData): Promi
   if (await deleteReview(user.id, movieId)) await audit(user.id, "review.delete", { type: "movie", id: movieId });
   revalidatePath(`/movies/${movieId}`);
   return { ok: "Your review has been deleted.", body: "" };
+}
+
+/** Marks someone else's review as helpful, or takes the vote back. */
+export async function voteHelpful(form: FormData) {
+  const user = await getCurrentUser();
+  if (!user || needsEmailConfirmation(user)) return;
+  const authorId = id(form, "authorId");
+  const movieId = id(form, "movieId");
+  if (!authorId || !movieId) return;
+  await setHelpfulVote(user.id, authorId, movieId, form.get("helpful") === "1");
+  revalidatePath(`/movies/${movieId}`);
 }
 
 /** Admin moderation: hide a review from everyone but its author, or show it again. */

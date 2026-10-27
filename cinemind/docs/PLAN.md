@@ -207,6 +207,7 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] **Admin → Reviews**: newest or hidden reviews; hiding keeps a review visible to its author with a note; all audited
 - [x] Reviews are part of "Download my data" and are deleted with the account
 - [x] The home page shows the latest reviews (spoiler and hidden ones left out); the admin dashboard counts reviews this week and hidden ones
+- [x] "Helpful" votes (migration 015): one per person per review, never on your own (also a database CHECK), only on public reviews; movie pages sort by most helpful (ties: newest) or newest; votes go when the review or the voter's account does
 - [x] Reviewer profiles (`/users/<id>`): name, picture, review count, average rating and public reviews; only for active accounts with a public review (so members can't be listed), never the email, `noindex`
 
 ### Follow-up: accessibility pass ✅

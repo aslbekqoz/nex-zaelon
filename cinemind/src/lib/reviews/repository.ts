@@ -10,6 +10,8 @@ export type Review = {
   spoilers: boolean;
   /** The author's own 1–10 rating of the movie, if they gave one. */
   rating: number | null;
+  /** How many people marked the review as helpful. */
+  helpful: number;
   createdAt: Date;
   updatedAt: Date;
   hidden: boolean;
@@ -18,27 +20,52 @@ export type Review = {
 const REVIEW_SELECT = `
   SELECT r.user_id::int AS "userId", r.movie_id::int AS "movieId", u.name AS "authorName", a.key AS "avatarKey",
          r.body, r.spoilers, ur.rating, r.created_at AS "createdAt", r.updated_at AS "updatedAt",
-         r.hidden_at IS NOT NULL AS hidden
+         r.hidden_at IS NOT NULL AS hidden,
+         (SELECT count(*)::int FROM review_votes v WHERE v.author_id = r.user_id AND v.movie_id = r.movie_id) AS helpful
     FROM movie_reviews r
     JOIN users u ON u.id = r.user_id
     LEFT JOIN user_avatars a ON a.user_id = r.user_id
     LEFT JOIN user_ratings ur ON ur.user_id = r.user_id AND ur.movie_id = r.movie_id`;
 
-/** Public reviews of a movie, newest first, from accounts that aren't disabled. */
-export async function listMovieReviews(movieId: number, limit = 30) {
-  const [list, count] = await Promise.all([
+export type ReviewSort = "helpful" | "newest";
+
+/**
+ * Public reviews of a movie from accounts that aren't disabled: most helpful first (ties:
+ * newest), or newest first. `votedFor` holds the authors whose review the viewer found helpful.
+ */
+export async function listMovieReviews(movieId: number, opts: { sort?: ReviewSort; viewerId?: number | null; limit?: number } = {}) {
+  const order = opts.sort === "newest" ? "r.created_at DESC" : "helpful DESC, r.created_at DESC";
+  const [list, count, votes] = await Promise.all([
     query<Review>(
       `${REVIEW_SELECT} WHERE r.movie_id = $1 AND r.hidden_at IS NULL AND u.disabled_at IS NULL
-        ORDER BY r.created_at DESC LIMIT $2`,
-      [movieId, limit],
+        ORDER BY ${order} LIMIT $2`,
+      [movieId, opts.limit ?? 30],
     ),
     query<{ n: number }>(
       `SELECT count(*)::int AS n FROM movie_reviews r JOIN users u ON u.id = r.user_id
         WHERE r.movie_id = $1 AND r.hidden_at IS NULL AND u.disabled_at IS NULL`,
       [movieId],
     ),
+    opts.viewerId
+      ? query<{ author: number }>("SELECT author_id::int AS author FROM review_votes WHERE voter_id = $1 AND movie_id = $2", [opts.viewerId, movieId])
+      : Promise.resolve({ rows: [] as { author: number }[] }),
   ]);
-  return { reviews: list.rows, total: count.rows[0].n };
+  return { reviews: list.rows, total: count.rows[0].n, votedFor: new Set(votes.rows.map((v) => v.author)) };
+}
+
+/** Adds or removes the viewer's "helpful" vote. Own, hidden and disabled authors' reviews can't get votes. */
+export async function setHelpfulVote(voterId: number, authorId: number, movieId: number, helpful: boolean) {
+  if (!helpful) {
+    await query("DELETE FROM review_votes WHERE voter_id = $1 AND author_id = $2 AND movie_id = $3", [voterId, authorId, movieId]);
+    return;
+  }
+  await query(
+    `INSERT INTO review_votes (voter_id, author_id, movie_id)
+     SELECT $1, r.user_id, r.movie_id FROM movie_reviews r JOIN users u ON u.id = r.user_id
+      WHERE r.user_id = $2 AND r.movie_id = $3 AND r.user_id <> $1 AND r.hidden_at IS NULL AND u.disabled_at IS NULL
+     ON CONFLICT DO NOTHING`,
+    [voterId, authorId, movieId],
+  );
 }
 
 export type LatestReview = Review & { movieTitle: string };

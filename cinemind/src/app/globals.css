@@ -513,3 +513,9 @@ a.stat-card:hover { border-color: var(--accent); }
 .profile-review-movie:hover strong { color: var(--accent); }
 .profile-review-poster { width: 36px; height: 54px; border-radius: 4px; overflow: hidden; background: var(--bg-hover); flex: none; }
 .profile-review-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.review-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; font-size: 13.5px; }
+.btn.is-on { border-color: var(--accent); color: var(--accent); }
+.review-sort { display: flex; gap: 4px; margin-top: 14px; font-size: 14px; }
+.review-sort a { padding: 4px 10px; border-radius: 999px; color: var(--text-muted); }
+.review-sort a:hover { color: var(--text); }
+.review-sort a.active { background: var(--bg-hover); color: var(--text); font-weight: 600; }
