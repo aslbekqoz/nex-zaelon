@@ -10,7 +10,7 @@ export async function Header() {
   return (
     <header className="header">
       <div className="container header-inner">
-        <Link href="/" className="logo" aria-label="CineMind AI home">
+        <Link href="/" className="logo">
           <span className="logo-mark" aria-hidden>
             C
           </span>

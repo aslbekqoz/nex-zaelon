@@ -26,9 +26,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
         <Header />
         <VerifyBanner />
-        <main>{children}</main>
+        <main id="main" tabIndex={-1}>
+          {children}
+        </main>
         <footer className="footer">
           <div className="container footer-inner">
             <span>© {new Date().getFullYear()} CineMind AI</span>
