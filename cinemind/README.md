@@ -55,6 +55,8 @@ Users change their email on the **Account** page (click your name in the header)
 
 The Account page also has a **profile picture**: JPEG, PNG, WebP, AVIF or GIF up to 5 MB (after confirming the email). It's cropped to a square, re-encoded and stripped of hidden data such as location, then shown in the header; without one, initials are shown. It also has **Change name** (2–60 characters; extra spaces are tidied and invisible characters rejected) and **Change password** (current password + new one twice). The user stays signed in on that device, every other device is signed out, unused reset links stop working, and a notice is emailed to them.
 
+**Delete account** (at the bottom of the Account page) needs the current password and typing `DELETE`. It permanently removes the account with its watchlist, ratings, preferences, profile picture and sessions, and emails a short confirmation. Content Studio drafts, templates and facts an editor made stay, without their name, and their entries in the activity log show as "Deleted user". The last active admin can't delete their account until someone else is made admin.
+
 "Forgot your password?" on the sign-in page emails a one-time link that expires in 60 minutes. Using it sets a new password, signs the account out everywhere else and signs it in. To send real emails, set in `.env`:
 
 - `APP_URL` — the site's public address (e.g. `https://cinemind.uz`); required in production because reset links are built from it, never from the request's Host header
@@ -69,7 +71,7 @@ Without `SMTP_URL`, development prints emails to the server console; production 
 - Behind a reverse proxy that sets `X-Forwarded-For` (nginx, Vercel, Cloudflare…), set `TRUST_PROXY_HEADERS=1` to also limit sign-ins and sign-ups per IP. Leave it unset otherwise, since those headers can be forged.
 - Disabled accounts are signed out everywhere and can't sign in.
 - Confirmation emails can be re-sent 3 times per hour; a link only confirms the address it was sent to.
-- Password changes need the current password (wrong guesses count toward the sign-in lockout).
+- Password changes and account deletion need the current password (wrong guesses count toward the sign-in lockout).
 - Email changes need the current password (wrong guesses count toward the sign-in lockout), are limited to 3 per hour, and make older reset and confirmation links stop working.
 - Profile pictures are always decoded and re-encoded on the server (never stored as uploaded), limited to 10 uploads per hour, and served from unguessable URLs with `nosniff` and a locked-down Content-Security-Policy.
 - Password reset requests are limited to 3 per email per hour; the reply is the same whether or not an account exists, and only a hash of each reset token is stored.
@@ -81,7 +83,7 @@ Without `SMTP_URL`, development prints emails to the server console; production 
 | `npm run dev` | Development server |
 | `npm run build` / `npm start` | Production build and server |
 | `npm run typecheck` | TypeScript check |
-| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, email confirmation and change, profile pictures, movie form, credits, filters, images) |
+| `npm test` | Unit tests (recommendations, Content Studio, rate limiting, password reset, email confirmation and change, profile pictures, account deletion, movie form, credits, filters, images) |
 | `npm run db:migrate` | Apply new migrations |
 | `npm run db:seed` | Load genres and starter movies (safe to re-run) |
 | `npm run admin:create -- email` | Give a user admin rights (and confirm their email) |

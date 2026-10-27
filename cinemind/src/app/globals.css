@@ -114,6 +114,8 @@ a.user-chip:hover .user-chip-name { color: var(--text); text-decoration: underli
 .btn:disabled { opacity: .6; cursor: progress; }
 .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .btn-primary:hover { background: var(--accent-strong); }
+.btn-danger { border-color: rgb(255 107 107 / 0.5); color: var(--danger); background: rgb(255 107 107 / 0.08); }
+.btn-danger:hover { background: rgb(255 107 107 / 0.16); }
 .btn-ghost { background: transparent; border-color: transparent; color: var(--text-muted); }
 .btn-ghost:hover { color: var(--text); }
 .btn-sm { padding: 6px 12px; font-size: 14px; }
@@ -437,3 +439,6 @@ a.stat-card:hover { border-color: var(--accent); }
 /* ---------- Footer ---------- */
 .footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 28px 0; color: var(--text-faint); font-size: 14px; }
 .footer-inner { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+/* ---------- Account deletion ---------- */
+.danger-zone { border-color: rgb(255 107 107 / 0.35); }

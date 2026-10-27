@@ -4,6 +4,7 @@ import { AvatarForm } from "@/components/AvatarForm";
 import { ChangeEmailForm } from "@/components/ChangeEmailForm";
 import { ChangeNameForm } from "@/components/ChangeNameForm";
 import { ChangePasswordForm } from "@/components/ChangePasswordForm";
+import { DeleteAccountForm } from "@/components/DeleteAccountForm";
 import { UserAvatar } from "@/components/UserAvatar";
 import { cancelPendingEmailChange } from "@/lib/auth/actions";
 import { getPendingChange } from "@/lib/auth/change-email";
@@ -97,6 +98,15 @@ export default async function AccountPage() {
           <Link href="/forgot-password" className="link">Reset it</Link>.
         </p>
         <ChangePasswordForm />
+      </section>
+
+      <section className="card-panel danger-zone">
+        <h2>Delete account</h2>
+        <p className="muted" style={{ margin: "4px 0 0" }}>
+          This permanently deletes your account, watchlist, ratings, preferences and profile picture, and signs you out everywhere.
+          It can&apos;t be undone.{user.role === "admin" ? " Content Studio drafts, templates and facts you made stay, without your name." : ""}
+        </p>
+        <DeleteAccountForm />
       </section>
     </div>
   );
