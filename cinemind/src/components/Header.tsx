@@ -2,6 +2,7 @@ import Link from "next/link";
 import { canUseAdmin, canUseStudio } from "@/lib/auth/roles";
 import { getCurrentUser } from "@/lib/auth/session";
 import { logout } from "@/lib/auth/actions";
+import { HeaderSearch } from "./HeaderSearch";
 import { UserAvatar } from "./UserAvatar";
 
 export async function Header() {
@@ -25,12 +26,7 @@ export async function Header() {
           {user && canUseStudio(user.role) ? <Link href="/studio">Studio</Link> : null}
           {user && canUseAdmin(user.role) ? <Link href="/admin">Admin</Link> : null}
         </nav>
-        <form action="/search" className="header-search" role="search">
-          <label className="sr-only" htmlFor="header-q">
-            Search movies
-          </label>
-          <input id="header-q" name="q" className="input" placeholder="Search for a movie…" autoComplete="off" />
-        </form>
+        <HeaderSearch />
         <div className="header-actions">
           {user ? (
             <>
