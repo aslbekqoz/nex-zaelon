@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AvatarForm } from "@/components/AvatarForm";
 import { ChangeEmailForm } from "@/components/ChangeEmailForm";
 import { ChangeNameForm } from "@/components/ChangeNameForm";
 import { ChangePasswordForm } from "@/components/ChangePasswordForm";
+import { UserAvatar } from "@/components/UserAvatar";
 import { cancelPendingEmailChange } from "@/lib/auth/actions";
 import { getPendingChange } from "@/lib/auth/change-email";
-import { requireUser } from "@/lib/auth/session";
+import { needsEmailConfirmation, requireUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = { title: "Account", robots: { index: false } };
 
@@ -24,7 +26,9 @@ export default async function AccountPage() {
         <h1>Account</h1>
       </div>
 
-      <section className="card-panel">
+      <section className="card-panel account-summary">
+        <UserAvatar name={user.name} avatarKey={user.avatarKey} size={88} />
+        <div className="account-summary-body">
         <dl className="facts" style={{ margin: 0 }}>
           <dt>Name</dt>
           <dd>{user.name}</dd>
@@ -43,6 +47,14 @@ export default async function AccountPage() {
             Didn&apos;t get the confirmation email? <Link href="/confirm-email" className="link">Resend it</Link>, or change the address below if it&apos;s wrong.
           </p>
         ) : null}
+        {needsEmailConfirmation(user) ? (
+          <p className="faint" style={{ fontSize: 13, margin: 0 }}>
+            Confirm your email address to add a profile picture.
+          </p>
+        ) : (
+          <AvatarForm hasAvatar={Boolean(user.avatarKey)} />
+        )}
+        </div>
       </section>
 
       <section className="card-panel">

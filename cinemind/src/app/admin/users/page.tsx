@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { UserActions } from "@/components/admin/UserActions";
+import { UserAvatar } from "@/components/UserAvatar";
 import { listUsers } from "@/lib/admin/repository";
 import { requireAdmin } from "@/lib/auth/session";
 import { when } from "../describe";
@@ -46,7 +47,8 @@ export default async function UsersPage({ searchParams }: Props) {
         {users.map((u) => (
           <li key={u.id} className={`user-row${u.disabledAt ? " is-disabled" : ""}`}>
             <div className="draft-main">
-              <strong>
+              <strong className="user-row-name">
+                <UserAvatar name={u.name} avatarKey={u.avatarKey} size={32} />
                 {u.name} {u.id === me.id ? <span className="faint">(you)</span> : null}
               </strong>
               <span className="faint">{u.email}</span>

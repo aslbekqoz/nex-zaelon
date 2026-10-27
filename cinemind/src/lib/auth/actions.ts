@@ -5,17 +5,19 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { audit } from "@/lib/audit";
+import { AvatarError, processAvatar } from "@/lib/avatars/process";
+import { deleteAvatar, saveAvatar } from "@/lib/avatars/repository";
 import { db, query } from "@/lib/db";
 import { appUrl, sendEmail } from "@/lib/email/send";
 import { passwordChangedNotice, passwordResetEmail } from "@/lib/email/templates";
-import { clientIp, emailChangeBlocked, loginBlocked, recordAttempt, registerBlocked, resetBlocked, verifyResendBlocked } from "./attempts";
+import { avatarUploadBlocked, clientIp, emailChangeBlocked, loginBlocked, recordAttempt, registerBlocked, resetBlocked, verifyResendBlocked } from "./attempts";
 import { cancelEmailChange, startEmailChange } from "./change-email";
 import { newEmailError, normalizeEmail } from "./email-change";
 import { nameError, normalizeName } from "./name";
 import { passwordChangeError, passwordError } from "./password";
 import { completeReset, createResetToken } from "./reset";
 import { sendVerificationEmail } from "./verify";
-import { createSession, destroySession, emailVerificationMode, getCurrentUser, safeNextPath } from "./session";
+import { createSession, destroySession, emailVerificationMode, getCurrentUser, needsEmailConfirmation, safeNextPath } from "./session";
 
 export type AuthState = { error?: string; ok?: string; email?: string; name?: string };
 
@@ -257,4 +259,38 @@ export async function changeName(_prev: AuthState, form: FormData): Promise<Auth
   // The name appears in the header on every page
   revalidatePath("/", "layout");
   return { ok: "Your name has been updated.", name };
+}
+
+// ---------- Profile picture ----------
+
+export async function uploadAvatar(_prev: AuthState, form: FormData): Promise<AuthState> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Please sign in first." };
+  if (needsEmailConfirmation(user)) return { error: "Confirm your email address before adding a picture." };
+  const file = form.get("avatar");
+  if (!(file instanceof File) || file.size === 0) return { error: "Choose a picture to upload." };
+  const blocked = await avatarUploadBlocked(user.email);
+  if (blocked) return { error: blocked };
+  await recordAttempt("avatar", user.email, await clientIp(), true);
+
+  let image: Buffer;
+  try {
+    image = await processAvatar(new Uint8Array(await file.arrayBuffer()));
+  } catch (err) {
+    if (err instanceof AvatarError) return { error: err.message };
+    console.error("[avatar] processing failed:", err);
+    return { error: "We couldn't process that picture. Try a different one." };
+  }
+  await saveAvatar(user.id, image);
+  await audit(user.id, "auth.avatar_changed", { type: "user", id: user.id }, { bytes: image.byteLength });
+  revalidatePath("/", "layout");
+  return { ok: "Your profile picture has been updated." };
+}
+
+export async function removeAvatar(_prev: AuthState): Promise<AuthState> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Please sign in first." };
+  if (await deleteAvatar(user.id)) await audit(user.id, "auth.avatar_removed", { type: "user", id: user.id });
+  revalidatePath("/", "layout");
+  return { ok: "Your profile picture has been removed." };
 }

@@ -15,6 +15,8 @@ export type User = {
   name: string;
   role: "user" | "admin";
   emailVerified: boolean;
+  /** Key of the profile picture (/avatars/<key>), or null when there is none. */
+  avatarKey: string | null;
 };
 
 function hashToken(token: string) {
@@ -55,8 +57,9 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
   const token = (await cookies()).get(COOKIE_NAME)?.value;
   if (!token) return null;
   const { rows } = await query<User>(
-    `SELECT u.id, u.email, u.name, u.role, u.email_verified_at IS NOT NULL AS "emailVerified"
+    `SELECT u.id, u.email, u.name, u.role, u.email_verified_at IS NOT NULL AS "emailVerified", a.key AS "avatarKey"
        FROM sessions s JOIN users u ON u.id = s.user_id
+       LEFT JOIN user_avatars a ON a.user_id = u.id
       WHERE s.token_hash = $1 AND s.expires_at > now() AND u.disabled_at IS NULL`,
     [hashToken(token)],
   );

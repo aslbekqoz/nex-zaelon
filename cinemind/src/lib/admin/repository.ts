@@ -10,6 +10,7 @@ export type AdminUser = {
   createdAt: string;
   disabledAt: string | null;
   emailVerifiedAt: string | null;
+  avatarKey: string | null;
   lastSeenAt: string | null;
   ratings: number;
   watchlist: number;
@@ -19,6 +20,7 @@ export async function listUsers(filter: { q?: string; role?: string; status?: st
   const like = filter.q ? `%${filter.q.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
   const { rows } = await query<AdminUser>(
     `SELECT u.id, u.email, u.name, u.role, u.created_at AS "createdAt", u.disabled_at AS "disabledAt", u.email_verified_at AS "emailVerifiedAt",
+            (SELECT key FROM user_avatars a WHERE a.user_id = u.id) AS "avatarKey",
             (SELECT max(created_at) FROM sessions s WHERE s.user_id = u.id) AS "lastSeenAt",
             (SELECT count(*)::int FROM user_ratings r WHERE r.user_id = u.id) AS ratings,
             (SELECT count(*)::int FROM watchlist_items w WHERE w.user_id = u.id) AS watchlist

@@ -66,7 +66,17 @@ button, input, select { font: inherit; color: inherit; }
 .header-search { flex: 1; max-width: 420px; margin-left: auto; }
 .header-actions { display: flex; align-items: center; gap: 10px; }
 .user-chip { color: var(--text-muted); font-size: 14px; white-space: nowrap; }
-a.user-chip:hover { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+a.user-chip { display: inline-flex; align-items: center; gap: 8px; }
+a.user-chip:hover .user-chip-name { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.user-chip-name { overflow: hidden; text-overflow: ellipsis; }
+.user-avatar { display: inline-grid; place-items: center; flex: none; border-radius: 50%; object-fit: cover; background: var(--bg-hover); border: 1px solid var(--border); }
+.user-avatar-initials { background: linear-gradient(160deg, #3a2a05, #1f2430); color: var(--accent); font-weight: 800; line-height: 1; }
+.account-summary { display: flex; gap: 20px; align-items: flex-start; }
+.account-summary-body { flex: 1; min-width: 0; display: grid; gap: 12px; }
+.avatar-form { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+.avatar-preview { width: 56px; height: 56px; }
+.user-row-name { display: inline-flex; align-items: center; gap: 10px; }
+@media (max-width: 560px) { .account-summary { flex-direction: column; } }
 .pending-change { border: 1px solid rgb(245 179 1 / 0.35); background: rgb(245 179 1 / 0.07); border-radius: var(--radius-sm); padding: 12px 14px; margin: 8px 0 4px; }
 .pending-change p { margin: 0 0 10px; }
 
@@ -76,7 +86,8 @@ a.user-chip:hover { color: var(--text); text-decoration: underline; text-underli
   .header-search { order: 4; max-width: none; width: 100%; flex-basis: 100%; }
   .header-actions .hide-sm { display: none; }
   /* The name links to the account page, so it stays visible on phones, shortened if needed */
-  .user-chip { max-width: 28vw; overflow: hidden; text-overflow: ellipsis; }
+  .user-chip { max-width: 36vw; }
+  .user-chip-name { max-width: 22vw; white-space: nowrap; }
   .header-actions { margin-left: auto; }
 }
 
