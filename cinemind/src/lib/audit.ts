@@ -5,6 +5,8 @@ export type AuditEntry = {
   id: number;
   actorName: string | null;
   actorEmail: string | null;
+  /** True when the actor's account has since been deleted. */
+  actorDeleted: boolean;
   action: string;
   targetType: string | null;
   targetId: string | null;
@@ -32,7 +34,7 @@ export async function audit(
 
 export async function listAudit(filter: { action?: string; actorId?: number; before?: number; limit?: number } = {}) {
   const { rows } = await query<AuditEntry>(
-    `SELECT a.id, u.name AS "actorName", u.email AS "actorEmail", a.action, a.target_type AS "targetType",
+    `SELECT a.id, u.name AS "actorName", u.email AS "actorEmail", a.actor_deleted AS "actorDeleted", a.action, a.target_type AS "targetType",
             a.target_id AS "targetId", a.details, a.created_at AS "createdAt"
        FROM audit_log a LEFT JOIN users u ON u.id = a.actor_id
       WHERE ($1::text IS NULL OR a.action LIKE $1 || '%')

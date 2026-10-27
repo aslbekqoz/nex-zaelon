@@ -123,3 +123,19 @@ export function passwordChangedNotice(input: { name: string; resetUrl: string; b
   ]);
   return { subject, text, html };
 }
+
+/** Sent after an account is deleted, to the address it had. */
+export function accountDeletedNotice(input: { name: string; brand?: string }) {
+  const brand = input.brand ?? "CineMind AI";
+  const subject = `Your ${brand} account was deleted`;
+  const lead = `Your ${brand} account and everything in it — watchlist, ratings, preferences and profile picture — have been deleted. This can't be undone.`;
+  const after = `You're welcome back any time: signing up again with this address starts a new, empty account.`;
+  const text = [`Hi ${input.name},`, "", lead, "", after, "", `— ${brand}`].join("\n");
+  const html = wrap([
+    `<p>Hi ${escapeHtml(input.name)},</p>`,
+    `<p>${escapeHtml(lead)}</p>`,
+    `<p>${escapeHtml(after)}</p>`,
+    `<p>— ${escapeHtml(brand)}</p>`,
+  ]);
+  return { subject, text, html };
+}

@@ -19,7 +19,7 @@ export function AuditTable({ entries }: { entries: AuditEntry[] }) {
           <li key={e.id}>
             <span className="faint audit-time">{when(e.createdAt)}</span>
             <span>
-              <strong>{e.actorName ?? (e.actorEmail ? e.actorEmail : "System")}</strong> {describeAction(e.action)}
+              <strong>{e.actorName ?? e.actorEmail ?? (e.actorDeleted ? "Deleted user" : "System")}</strong> {describeAction(e.action)}
               {e.targetType ? (
                 <>
                   {" "}

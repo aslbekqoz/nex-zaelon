@@ -157,6 +157,12 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] Stored in PostgreSQL (`user_avatars`, migration 010), served from `/avatars/<random key>` with a new key on every upload, so URLs can be cached forever and can't be guessed
 - [x] Shown in the header, on the Account page and in Admin → Users; initials when there is none; 10 uploads per hour; audit entries
 
+### Follow-up: deleting the account ✅
+- [x] **Delete account** on the Account page, folded away until asked for; needs the current password (wrong guesses share the sign-in lockout) and typing DELETE
+- [x] Removes the user and everything that is theirs (sessions, watchlist, ratings, preferences, picture, pending links); Studio drafts, templates and facts stay without a name
+- [x] Personal details in audit entries about the user are cleared; their past actions show as "Deleted user"; a new `auth.account_deleted` entry (migration 011 adds `audit_log.actor_deleted`)
+- [x] The last active admin can't delete their account; a goodbye email is sent; the address can sign up again as a new, empty account
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).

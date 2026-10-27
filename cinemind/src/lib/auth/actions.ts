@@ -9,9 +9,11 @@ import { AvatarError, processAvatar } from "@/lib/avatars/process";
 import { deleteAvatar, saveAvatar } from "@/lib/avatars/repository";
 import { db, query } from "@/lib/db";
 import { appUrl, sendEmail } from "@/lib/email/send";
-import { passwordChangedNotice, passwordResetEmail } from "@/lib/email/templates";
+import { accountDeletedNotice, passwordChangedNotice, passwordResetEmail } from "@/lib/email/templates";
 import { avatarUploadBlocked, clientIp, emailChangeBlocked, loginBlocked, recordAttempt, registerBlocked, resetBlocked, verifyResendBlocked } from "./attempts";
+import { deleteAccount as deleteUserAccount } from "./account";
 import { cancelEmailChange, startEmailChange } from "./change-email";
+import { deleteAccountError } from "./delete-account";
 import { newEmailError, normalizeEmail } from "./email-change";
 import { nameError, normalizeName } from "./name";
 import { passwordChangeError, passwordError } from "./password";
@@ -259,6 +261,35 @@ export async function changeName(_prev: AuthState, form: FormData): Promise<Auth
   // The name appears in the header on every page
   revalidatePath("/", "layout");
   return { ok: "Your name has been updated.", name };
+}
+
+// ---------- Deleting the account ----------
+
+export async function deleteAccount(_prev: AuthState, form: FormData): Promise<AuthState> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Please sign in first." };
+  const password = typeof form.get("password") === "string" ? (form.get("password") as string) : "";
+  const invalid = deleteAccountError(password, field(form, "confirm"));
+  if (invalid) return { error: invalid };
+
+  // Wrong passwords share the sign-in lockout, so this form can't be used to guess
+  const ip = await clientIp();
+  const locked = await loginBlocked(user.email, ip);
+  if (locked) return { error: locked };
+  const { rows } = await query<{ password_hash: string }>("SELECT password_hash FROM users WHERE id = $1", [user.id]);
+  const ok = Boolean(rows[0]) && (await bcrypt.compare(password, rows[0].password_hash));
+  await recordAttempt("login", user.email, ip, ok);
+  if (!ok) return { error: "Your current password is incorrect." };
+
+  const result = await deleteUserAccount(user.id, user.email);
+  if (result === "last_admin") {
+    return { error: "You're the only admin. Make someone else an admin before deleting your account." };
+  }
+  await destroySession();
+  const notice = accountDeletedNotice({ name: user.name });
+  after(() => sendEmail({ to: user.email, ...notice }));
+  revalidatePath("/", "layout");
+  redirect("/account/deleted");
 }
 
 // ---------- Profile picture ----------
