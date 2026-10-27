@@ -100,6 +100,19 @@ export default async function AccountPage() {
         <ChangePasswordForm />
       </section>
 
+      <section className="card-panel">
+        <h2>Download your data</h2>
+        <p className="muted" style={{ margin: "4px 0 0" }}>
+          A JSON file with your account details, watchlist, ratings, favourite genres, profile picture, signed-in sessions and
+          account activity. Passwords and sign-in tokens are never included.
+        </p>
+        <form method="post" action="/account/export" style={{ marginTop: 12 }}>
+          <button type="submit" className="btn">
+            Download my data
+          </button>
+        </form>
+      </section>
+
       <section className="card-panel danger-zone">
         <h2>Delete account</h2>
         <p className="muted" style={{ margin: "4px 0 0" }}>

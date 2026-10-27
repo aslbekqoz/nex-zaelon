@@ -8,6 +8,7 @@ const LABELS: Record<string, string> = {
   "auth.avatar_changed": "updated their profile picture",
   "auth.avatar_removed": "removed their profile picture",
   "auth.account_deleted": "deleted their account",
+  "auth.data_exported": "downloaded their data",
   "auth.email_verified": "confirmed their email",
   "auth.verify_resent": "asked for a new confirmation email",
   "auth.email_change_requested": "asked to change their email",
