@@ -215,6 +215,11 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] "Skip to content" link as the first stop on every page; focus ring on button-styled file pickers
 - [x] `npm run a11y` (`scripts/a11y.mjs`, playwright-core + axe-core) audits 21 public and signed-in pages and fails on any finding; CI runs it against the production build
 
+### Follow-up: security headers ✅
+- [x] `src/proxy.ts` sends a per-request nonce Content-Security-Policy on every page: scripts only with the nonce (`'strict-dynamic'`), images from https, frames only from youtube-nocookie.com, no plugins, `frame-ancestors 'none'`, forms and `<base>` limited to the site
+- [x] `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, a restrictive `Permissions-Policy`, `Cross-Origin-Opener-Policy: same-origin`; with an https `APP_URL` also HSTS (2 years) and `upgrade-insecure-requests`
+- [x] The policy is a pure, unit-tested module (`src/lib/security/headers.ts`); the accessibility audit runs with CSP bypassed since it injects axe
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).

@@ -90,6 +90,7 @@ With `APP_URL` set, the site serves `/robots.txt` and `/sitemap.xml` (every movi
 ### Security notes
 
 - Sign-in is limited to 5 failed attempts per email every 15 minutes.
+- Every page is sent with a strict Content-Security-Policy (scripts only with a per-request nonce, no framing by other sites) and the usual hardening headers; with an `https://` `APP_URL` also HSTS.
 - Behind a reverse proxy that sets `X-Forwarded-For` (nginx, Vercel, Cloudflare…), set `TRUST_PROXY_HEADERS=1` to also limit sign-ins and sign-ups per IP. Leave it unset otherwise, since those headers can be forged.
 - Disabled accounts are signed out everywhere and can't sign in.
 - Confirmation emails can be re-sent 3 times per hour; a link only confirms the address it was sent to.
