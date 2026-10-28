@@ -15,7 +15,7 @@ const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"];
 
 const PUBLIC = ["/", "/search", "/search?q=the", "/movies/1", "/login", "/register", "/forgot-password"];
 const SIGNED_IN = [
-  "/account", "/watchlist", "/recommendations", "/onboarding",
+  "/account", "/watchlist", "/stats", "/recommendations", "/onboarding",
   "/admin", "/admin/users", "/admin/movies", "/admin/reviews", "/admin/audit",
   "/studio", "/studio/new", "/studio/templates", "/studio/facts", "/studio/settings",
 ];

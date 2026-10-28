@@ -519,3 +519,16 @@ a.stat-card:hover { border-color: var(--accent); }
 .review-sort a { padding: 4px 10px; border-radius: 999px; color: var(--text-muted); }
 .review-sort a:hover { color: var(--text); }
 .review-sort a.active { background: var(--bg-hover); color: var(--text); font-weight: 600; }
+
+/* ---------- My stats ---------- */
+.stats-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 18px; }
+.stats-columns .card-panel { margin: 0; }
+.histogram { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
+.histogram li { display: grid; grid-template-columns: 2ch 1fr 4ch; align-items: center; gap: 10px; font-size: 14px; font-variant-numeric: tabular-nums; }
+.histogram-label { color: var(--text-muted); text-align: right; }
+.histogram-track { height: 12px; border-radius: 6px; background: var(--bg-hover); overflow: hidden; }
+.histogram-bar { display: block; height: 100%; border-radius: 6px; background: var(--accent); }
+.histogram-count { color: var(--text-muted); }
+.genre-stats li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.genre-stats li:last-child { border-bottom: 0; }
+.stats-cards { grid-template-columns: repeat(auto-fill, minmax(min(190px, 100%), 1fr)); }

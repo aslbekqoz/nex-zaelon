@@ -45,6 +45,11 @@ export default async function AccountPage() {
             )}
           </dd>
         </dl>
+        <p style={{ fontSize: 14, margin: "10px 0 0" }}>
+          <Link href="/stats" className="link">
+            See your movie stats →
+          </Link>
+        </p>
         {!user.emailVerified ? (
           <p className="faint" style={{ fontSize: 14, margin: "12px 0 0" }}>
             Didn&apos;t get the confirmation email? <Link href="/confirm-email" className="link">Resend it</Link>, or change the address below if it&apos;s wrong.

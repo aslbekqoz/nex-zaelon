@@ -220,6 +220,11 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, a restrictive `Permissions-Policy`, `Cross-Origin-Opener-Policy: same-origin`; with an https `APP_URL` also HSTS (2 years) and `upgrade-insecure-requests`
 - [x] The policy is a pure, unit-tested module (`src/lib/security/headers.ts`); the accessibility audit runs with CSP bypassed since it injects axe
 
+### Follow-up: My stats ✅
+- [x] `/stats` (linked from the Account page and the watchlist): movies rated with the average, watched with total runtime, watchlist size, reviews and helpful votes received
+- [x] A 1–10 rating histogram (with screen-reader text per bar), favourite genres with count and average, and the decade rated most; an empty state before the first rating
+- [x] Calculations are a pure, unit-tested module (`src/lib/stats/compute.ts`); the page is part of the accessibility audit
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).

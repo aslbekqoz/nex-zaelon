@@ -31,6 +31,10 @@ Without a key the platform runs on the starter catalogue: 30 well-known films wi
 
 Search then imports matching movies from TMDB into the catalogue. The first time a movie page is opened, its poster, rating, runtime, trailer, cast and crew are filled in; opening a person's page adds their best-known films. Admins can also import TMDB's trending, popular, top-rated and now-playing lists from **Admin → Movies**. Uzbek titles and synopses are never overwritten, and movies an admin edited by hand are not refreshed.
 
+### My stats
+
+**My stats** (`/stats`, linked from the Account page and the watchlist) shows how many movies you've rated and your average, how much you've watched, a chart of the ratings you give, your favourite genres and the decade you rate most.
+
 ### Reviews
 
 Movie pages have a **Reviews** section. Users with a confirmed email can write one review per movie (20–4000 characters), mark it as containing spoilers, and edit or delete it later; their rating of the movie appears on it. Other users can mark a review as **Helpful**; reviews are listed most helpful first, or newest first. The home page shows the latest reviews (never spoiler ones). A reviewer's name opens their profile with all their public reviews (no email shown, not indexed by search engines). Admins moderate under **Admin → Reviews**: a hidden review disappears for everyone except its author, who sees a note.
@@ -148,6 +152,7 @@ src/lib/recommend/    recommendation engine and moods
 src/lib/ratings/      user ratings
 src/lib/reviews/      movie reviews and moderation
 src/lib/preferences/  favourite genres and onboarding
+src/lib/stats/        "My stats" calculations
 src/lib/studio/       Content Studio: templates, renderer, formatters, drafts, facts
 src/lib/account/      "Download my data" export
 src/lib/admin/        admin panel: users, movie editing, dashboard
