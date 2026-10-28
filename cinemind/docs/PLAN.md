@@ -225,6 +225,11 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] A 1–10 rating histogram (with screen-reader text per bar), favourite genres with count and average, and the decade rated most; an empty state before the first rating
 - [x] Calculations are a pure, unit-tested module (`src/lib/stats/compute.ts`); the page is part of the accessibility audit
 
+### Follow-up: where to watch ✅
+- [x] Movie pages from TMDB show **Where to watch in <country>**: stream, free, free with ads, rent and buy, with provider logos, in `TMDB_REGION` (default `UZ`), credited to JustWatch via TMDB with a link to TMDB's page
+- [x] Read live from TMDB (`/movie/{id}/watch/providers`) and kept in memory for 6 hours per movie and region (errors for 10 minutes); without a key, for local-only movies, when nothing is listed or when TMDB fails, the section is simply left out
+- [x] Parsing is a pure, unit-tested module (`src/lib/movies/providers.ts`): sorted by TMDB's priority, duplicates dropped, only TMDB links kept
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).

@@ -1,5 +1,6 @@
 import "server-only";
 import type { RawCast, RawCrew } from "./credits";
+import type { RawWatchProviders } from "./providers";
 
 // Thin client for TMDB (themoviedb.org). Without a key the platform runs on the local catalogue only.
 
@@ -57,6 +58,10 @@ export async function tmdbSearch(q: string) {
 
 export async function tmdbDetails(id: number) {
   return tmdb<TmdbMovieDetails>(`/movie/${id}`, { append_to_response: "videos,credits" });
+}
+
+export async function tmdbWatchProviders(id: number) {
+  return tmdb<RawWatchProviders>(`/movie/${id}/watch/providers`);
 }
 
 export type TmdbPersonCredit = TmdbMovieSummary & { character?: string; job?: string; order?: number; department?: string };
