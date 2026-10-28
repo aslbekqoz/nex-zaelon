@@ -29,7 +29,7 @@ Without a key the platform runs on the starter catalogue: 30 well-known films wi
 2. Get a key under **Settings → API** (a v3 API key or a v4 Read Access Token both work)
 3. Put it on the `TMDB_API_KEY=` line in `.env` and restart the server
 
-Search then imports matching movies from TMDB into the catalogue. The first time a movie page is opened, its poster, rating, runtime, trailer, cast and crew are filled in; opening a person's page adds their best-known films. Admins can also import TMDB's trending, popular, top-rated and now-playing lists from **Admin → Movies**. Uzbek titles and synopses are never overwritten, and movies an admin edited by hand are not refreshed.
+Search then imports matching movies from TMDB into the catalogue. Movie pages also show **Where to watch** (streaming, rental and purchase services from JustWatch via TMDB) for the country in `TMDB_REGION` (two letters, default `UZ`). The first time a movie page is opened, its poster, rating, runtime, trailer, cast and crew are filled in; opening a person's page adds their best-known films. Admins can also import TMDB's trending, popular, top-rated and now-playing lists from **Admin → Movies**. Uzbek titles and synopses are never overwritten, and movies an admin edited by hand are not refreshed.
 
 ### My stats
 
