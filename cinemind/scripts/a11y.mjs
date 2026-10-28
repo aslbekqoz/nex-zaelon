@@ -31,6 +31,8 @@ async function audit(page, path) {
 }
 
 const browser = await chromium.launch();
+// The site's Content-Security-Policy would (rightly) block injecting axe as an inline script
+const context = await browser.newContext({ bypassCSP: true });
 let failures = 0;
 try {
   const report = async (page, paths) => {
@@ -42,10 +44,10 @@ try {
     }
   };
 
-  await report(await browser.newPage(), PUBLIC);
+  await report(await context.newPage(), PUBLIC);
 
   const email = `a11y-${Date.now()}@example.com`;
-  const page = await browser.newPage();
+  const page = await (await browser.newContext({ bypassCSP: true })).newPage();
   await page.goto(`${BASE}/register`);
   await page.fill("#name", "Accessibility Check");
   await page.fill("#email", email);
