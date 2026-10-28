@@ -13,7 +13,7 @@ export async function loadExportSource(userId: number): Promise<ExportSource | n
     [userId],
   );
   if (!users.rows[0]) return null;
-  const [genres, watchlist, ratings, pending, sessions, avatar, activity, reviews] = await Promise.all([
+  const [genres, watchlist, ratings, pending, sessions, avatar, activity, reviews, lists] = await Promise.all([
     query<{ name: string }>(
       `SELECT g.name_en AS name FROM user_favorite_genres f JOIN genres g ON g.id = f.genre_id
         WHERE f.user_id = $1 ORDER BY g.name_en`,
@@ -61,6 +61,13 @@ export async function loadExportSource(userId: number): Promise<ExportSource | n
         WHERE r.user_id = $1 ORDER BY r.created_at DESC`,
       [userId],
     ),
+    query<ExportSource["lists"][number]>(
+      `SELECT l.title, l.description, l.is_public AS "isPublic", l.created_at AS "createdAt",
+              COALESCE((SELECT json_agg(json_build_object('movieId', m.id, 'title', m.title) ORDER BY i.position)
+                          FROM list_items i JOIN movies m ON m.id = i.movie_id WHERE i.list_id = l.id), '[]') AS movies
+         FROM user_lists l WHERE l.user_id = $1 ORDER BY l.created_at`,
+      [userId],
+    ),
   ]);
   return {
     user: users.rows[0],
@@ -72,5 +79,6 @@ export async function loadExportSource(userId: number): Promise<ExportSource | n
     avatar: avatar.rows[0] ?? null,
     activity: activity.rows,
     reviews: reviews.rows,
+    lists: lists.rows,
   };
 }

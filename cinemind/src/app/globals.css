@@ -542,3 +542,24 @@ a.stat-card:hover { border-color: var(--accent); }
 .watch-providers li { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px 4px 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-elevated); font-size: 13.5px; }
 .watch-providers img { width: 28px; height: 28px; border-radius: 6px; display: block; }
 .watch-credit { margin: 0; font-size: 12.5px; }
+
+/* ---------- Lists ---------- */
+.list-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: 16px; margin-top: 16px; }
+.list-card { display: grid; gap: 8px; color: inherit; }
+.list-card:hover strong { color: var(--accent); }
+.list-cover { display: grid; grid-template-columns: 1fr 1fr; aspect-ratio: 1; border-radius: var(--radius); overflow: hidden; background: var(--bg-elevated); border: 1px solid var(--border); }
+.list-cover img, .list-cover span { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--bg-hover); }
+.list-card-body { display: grid; gap: 2px; font-size: 14px; }
+.list-description { white-space: pre-line; max-width: 70ch; }
+.list-items { list-style: none; margin: 8px 0 24px; padding: 0; display: grid; gap: 10px; }
+.list-item { display: grid; grid-template-columns: 2.5ch 64px 1fr auto; align-items: center; gap: 14px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elevated); }
+.list-rank { font-size: 20px; font-weight: 800; color: var(--text-muted); text-align: right; font-variant-numeric: tabular-nums; }
+.list-item-poster .poster { border-radius: var(--radius-sm); }
+.list-item-body { min-width: 0; }
+.list-item-actions { display: flex; gap: 4px; }
+@media (max-width: 640px) {
+  .list-item { grid-template-columns: 2.5ch 56px 1fr; }
+  .list-item-actions { grid-column: 2 / -1; }
+}
+.add-to-list { margin-top: 14px; }
+.section-tight { margin-top: 18px; }

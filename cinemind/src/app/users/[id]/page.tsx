@@ -5,6 +5,8 @@ import { ReviewCard } from "@/components/ReviewList";
 import { UserAvatar } from "@/components/UserAvatar";
 import { posterImage } from "@/lib/movies/images";
 import { getReviewerProfile, listUserReviews } from "@/lib/reviews/repository";
+import { ListCard } from "@/components/ListCard";
+import { listsOfUser } from "@/lib/lists/repository";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -17,13 +19,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const id = parseId((await params).id);
   const profile = id ? await getReviewerProfile(id) : null;
   // Members' pages stay out of search engines; their reviews are indexed on the movie pages
-  return { title: profile ? `${profile.name}'s reviews` : "Not found", robots: { index: false, follow: true } };
+  return { title: profile ? profile.name : "Not found", robots: { index: false, follow: true } };
 }
 
 export default async function ReviewerPage({ params }: Props) {
   const id = parseId((await params).id);
   if (!id) notFound();
-  const [profile, reviews] = await Promise.all([getReviewerProfile(id), listUserReviews(id)]);
+  const [profile, reviews, lists] = await Promise.all([getReviewerProfile(id), listUserReviews(id), listsOfUser(id, { publicOnly: true })]);
   if (!profile) notFound();
   const rated = reviews.filter((r) => r.rating);
   const average = rated.length ? rated.reduce((sum, r) => sum + (r.rating ?? 0), 0) / rated.length : null;
@@ -41,6 +43,17 @@ export default async function ReviewerPage({ params }: Props) {
           </p>
         </div>
       </div>
+      {lists.length ? (
+        <section className="section-tight">
+          <h2>Lists</h2>
+          <div className="list-grid">
+            {lists.map((l) => (
+              <ListCard key={l.id} list={l} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+      {reviews.length ? <h2 style={{ marginTop: 24 }}>Reviews</h2> : null}
       <div className="review-list">
         {reviews.map((r) => {
           const poster = r.posterUrl ? posterImage(r.posterUrl) : null;

@@ -31,6 +31,10 @@ Without a key the platform runs on the starter catalogue: 30 well-known films wi
 
 Search then imports matching movies from TMDB into the catalogue. Movie pages also show **Where to watch** (streaming, rental and purchase services from JustWatch via TMDB) for the country in `TMDB_REGION` (two letters, default `UZ`). The first time a movie page is opened, its poster, rating, runtime, trailer, cast and crew are filled in; opening a person's page adds their best-known films. Admins can also import TMDB's trending, popular, top-rated and now-playing lists from **Admin → Movies**. Uzbek titles and synopses are never overwritten, and movies an admin edited by hand are not refreshed.
 
+### Lists
+
+**My lists** (`/lists`) lets users build named, ordered collections of movies ("Best of the 90s"). Add movies from any movie page, reorder or remove them, and choose whether a list is private or public; public lists can be shared by link and appear on the owner's profile.
+
 ### My stats
 
 **My stats** (`/stats`, linked from the Account page and the watchlist) shows how many movies you've rated and your average, how much you've watched, a chart of the ratings you give, your favourite genres and the decade you rate most.
@@ -145,6 +149,7 @@ src/components/       UI components
 src/lib/auth/         sessions, authentication, rate limits, password reset, email confirmation and change
 src/lib/avatars/      profile picture processing and storage
 src/lib/email/        outgoing email (SMTP) and templates
+src/lib/lists/        user lists
 src/lib/movies/       catalogue, TMDB client, sync, credits, filters, image sizes
 src/lib/people/       person pages and filmographies
 src/lib/watchlist/    personal watchlists

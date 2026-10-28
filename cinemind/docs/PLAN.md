@@ -230,6 +230,11 @@ Scaling note: the engine scores the 3,000 most popular movies in memory per requ
 - [x] Read live from TMDB (`/movie/{id}/watch/providers`) and kept in memory for 6 hours per movie and region (errors for 10 minutes); without a key, for local-only movies, when nothing is listed or when TMDB fails, the section is simply left out
 - [x] Parsing is a pure, unit-tested module (`src/lib/movies/providers.ts`): sorted by TMDB's priority, duplicates dropped, only TMDB links kept
 
+### Follow-up: user lists ✅
+- [x] **My lists** (`/lists`, migration 016): named, ordered movie collections with an optional description; private by default, public lists open to anyone with the link and appear on the owner's profile (`noindex`)
+- [x] Movie pages get **Add to list** (or "Start a list with this movie"); list owners reorder (↑ ↓), remove movies, edit and delete (with confirmation); up to 50 lists of 100 movies each
+- [x] Every change checks ownership in SQL; others get a 404 for private lists; lists are in "Download my data" and are deleted with the account
+
 ## Known limitations
 - Seed movies have no rating, poster or trailer; those come only from TMDB (no made-up numbers). A colour gradient stands in for the poster.
 - For seed movies only the release year is known (stored as `YYYY-01-01`; the UI shows the year only).

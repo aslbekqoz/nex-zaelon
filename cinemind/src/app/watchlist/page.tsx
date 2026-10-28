@@ -42,6 +42,10 @@ export default async function WatchlistPage({ searchParams }: Props) {
               <Link href="/stats" className="link">
                 My stats
               </Link>
+              {" · "}
+              <Link href="/lists" className="link">
+                My lists
+              </Link>
             </>
           ) : null}
         </p>
