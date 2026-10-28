@@ -19,6 +19,8 @@ import { ReviewCard } from "@/components/ReviewList";
 import { ReviewForm } from "@/components/ReviewForm";
 import { getOwnReview, listMovieReviews } from "@/lib/reviews/repository";
 import { WatchOptions } from "@/components/WatchOptions";
+import { AddToList } from "@/components/AddToList";
+import { listsForMovieMenu } from "@/lib/lists/repository";
 import { getWatchOptions } from "@/lib/movies/watch";
 import { jsonLdScript, movieJsonLd, OG_SITE, shareImage } from "@/lib/seo";
 import { appUrl } from "@/lib/site";
@@ -92,10 +94,11 @@ export default async function MoviePage({ params, searchParams }: Props) {
   if (!movie) notFound();
   const reviewSort = (await searchParams).reviews === "newest" ? "newest" : "helpful";
   const canVote = Boolean(user && !needsEmailConfirmation(user));
-  const [[status, userRating, ownReview], reviews, watch] = await Promise.all([
+  const [[status, userRating, ownReview], myLists, reviews, watch] = await Promise.all([
     user
       ? Promise.all([getWatchlistStatus(user.id, movie.id), getUserRating(user.id, movie.id), getOwnReview(user.id, movie.id)])
       : Promise.resolve([{ saved: false, watched: false }, null, null] as const),
+    canVote && user ? listsForMovieMenu(user.id, movie.id) : Promise.resolve(null),
     listMovieReviews(movie.id, { sort: reviewSort, viewerId: user?.id }),
     getWatchOptions(movie.tmdbId),
   ]);
@@ -218,6 +221,7 @@ export default async function MoviePage({ params, searchParams }: Props) {
               )}
             </div>
             {user ? <RatingWidget movieId={movie.id} rating={userRating} /> : null}
+            {myLists ? <AddToList movieId={movie.id} lists={myLists} /> : null}
             {watch ? <WatchOptions options={watch} /> : null}
           </div>
         </div>

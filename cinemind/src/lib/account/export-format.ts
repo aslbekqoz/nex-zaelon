@@ -19,6 +19,7 @@ export type ExportSource = {
   avatar: { contentType: string; updatedAt: Date; image: Uint8Array } | null;
   activity: { action: string; createdAt: Date; details: Record<string, unknown> }[];
   reviews: { movieId: number; title: string; body: string; spoilers: boolean; hidden: boolean; createdAt: Date; updatedAt: Date }[];
+  lists: { title: string; description: string; isPublic: boolean; createdAt: Date; movies: { movieId: number; title: string }[] }[];
 };
 
 const iso = (d: Date | null) => (d ? d.toISOString() : null);
@@ -69,6 +70,13 @@ export function buildAccountExport(src: ExportSource, opts: { base: string | nul
       writtenAt: r.createdAt.toISOString(),
       updatedAt: r.updatedAt.toISOString(),
       url: movieUrl(r.movieId),
+    })),
+    lists: src.lists.map((l) => ({
+      title: l.title,
+      description: l.description,
+      public: l.isPublic,
+      createdAt: l.createdAt.toISOString(),
+      movies: l.movies.map((m) => ({ title: m.title, url: movieUrl(m.movieId) })),
     })),
     profilePicture: src.avatar
       ? {

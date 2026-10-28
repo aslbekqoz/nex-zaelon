@@ -48,6 +48,10 @@ export default async function AccountPage() {
         <p style={{ fontSize: 14, margin: "10px 0 0" }}>
           <Link href="/stats" className="link">
             See your movie stats →
+          </Link>{" "}
+          ·{" "}
+          <Link href="/lists" className="link">
+            My lists
           </Link>
         </p>
         {!user.emailVerified ? (

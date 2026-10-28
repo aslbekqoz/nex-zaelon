@@ -36,6 +36,8 @@ const LABELS: Record<string, string> = {
   "review.delete": "deleted their review of",
   "review.hide": "hid a review of",
   "review.unhide": "unhid a review of",
+  "list.create": "created a list",
+  "list.delete": "deleted a list",
   "draft.create": "created a draft",
   "draft.ai_write": "used AI on a draft",
   "draft.delete": "deleted a draft",

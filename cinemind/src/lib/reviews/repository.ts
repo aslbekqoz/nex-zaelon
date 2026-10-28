@@ -86,17 +86,18 @@ export async function listLatestReviews(limit = 6) {
 export type ReviewerProfile = { id: number; name: string; avatarKey: string | null; joinedAt: Date; reviews: number };
 
 /**
- * A reviewer's public profile. Only active accounts with at least one public review have one,
- * so profile URLs can't be used to list members.
+ * A member's public profile. Only active accounts with a public review or a public list have
+ * one, so profile URLs can't be used to list members.
  */
 export async function getReviewerProfile(userId: number) {
   const { rows } = await query<ReviewerProfile>(
-    `SELECT u.id::int AS id, u.name, a.key AS "avatarKey", u.created_at AS "joinedAt", count(r.*)::int AS reviews
+    `SELECT u.id::int AS id, u.name, a.key AS "avatarKey", u.created_at AS "joinedAt",
+            (SELECT count(*)::int FROM movie_reviews r WHERE r.user_id = u.id AND r.hidden_at IS NULL) AS reviews
        FROM users u
-       JOIN movie_reviews r ON r.user_id = u.id AND r.hidden_at IS NULL
        LEFT JOIN user_avatars a ON a.user_id = u.id
       WHERE u.id = $1 AND u.disabled_at IS NULL
-      GROUP BY u.id, a.key`,
+        AND (EXISTS (SELECT 1 FROM movie_reviews r WHERE r.user_id = u.id AND r.hidden_at IS NULL)
+             OR EXISTS (SELECT 1 FROM user_lists l WHERE l.user_id = u.id AND l.is_public))`,
     [userId],
   );
   return rows[0] ?? null;
