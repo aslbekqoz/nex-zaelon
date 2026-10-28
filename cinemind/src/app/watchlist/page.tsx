@@ -36,6 +36,14 @@ export default async function WatchlistPage({ searchParams }: Props) {
           {all.length
             ? `${all.length} ${all.length === 1 ? "movie" : "movies"} · ${left} not watched yet`
             : "Save the movies you want to watch here."}
+          {all.length ? (
+            <>
+              {" · "}
+              <Link href="/stats" className="link">
+                My stats
+              </Link>
+            </>
+          ) : null}
         </p>
       </div>
 
